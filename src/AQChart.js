@@ -110,42 +110,6 @@ const AQChart = () => {
 
         <>
 
-        <section className="air-quality-summary mb-4 py-5">
-            <Row>
-            <Col>
-                <div className="air-quality-guage">
-                    <div className="air-quality-guage-needle"
-                        style={{
-                            left: `${(airQualityScale.findIndex(scale => scale.quality === airQuality) / (airQualityScale.length - 1)) * 100}%`
-                        }}
-                    ></div>
-                    {
-                        // for each airQualityScale item
-                        airQualityScale.map((item, index) => {
-                            return (
-                                <div className="air-quality-guage-segment" key={index} style={{backgroundColor: item.color}}>
-                                    {item.short_label}
-                                </div>
-                            )
-                        })
-                    }
-                </div>
-            </Col>
-
-            </Row>
-            <Row>
-                <Col className="text-center pt-3 pb-1">
-                        
-                    Between <strong>{dateRange[0] < 2002 ? 2002 : dateRange[0]} to {dateRange[1]}</strong> the <strong>average</strong> air quality in <span className="location-highlight">
-                        <div className="country-flag-circle"><ReactCountryFlag countryCode={convertCountry('iso3',country).iso2} svg /></div>
-                    <span>{ city != '' && city != 'location' ? cities.filter(c => c.city.replaceAll(' ','-').toLowerCase() == city)[0].city : address }</span>
-                    </span> was <div className="quality-badge" style={{backgroundColor: airQualityScale.find(aq => aq.quality === airQuality)?.color}}>{airQuality}</div> and <strong>{trend.m > 0 ? 'worsening' : 'improving'}</strong>.   
-
-
-                </Col>
-            </Row>
-        </section>
-
         <section className="chart-wrapper">
 
             

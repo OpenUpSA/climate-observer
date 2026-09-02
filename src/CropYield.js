@@ -199,11 +199,7 @@ const CropYield = () => {
                 <div className="chart-controls">
                     <Row className="justify-content-between">
                         <Col xs="auto">
-                            <Form.Select value={metric} onChange={(e) => setMetric(e.target.value)}>
-                                {METRIC_OPTIONS.map(m => (
-                                    <option key={m} value={m}>{humanizeMetric(m)}</option>
-                                ))}
-                            </Form.Select>
+                           
                         </Col>
                         <Col xs="auto">
                             <Dropdown>
@@ -244,7 +240,9 @@ const CropYield = () => {
                                 <span className="legend-item"><span className="line-sample" style={{ background: '#2b8cbe' }}></span> {humanizeMetric(metric)}</span>
                                 <span className="legend-item"><span className="line-sample dashed" style={{ background: '#de2d26' }}></span> Trend</span>
                             </Col>
-                            <Col className="text-end text-muted small">Source: Supabase crops table</Col>
+                            <Col className="text-end text-muted small">
+                                Source: <a href="https://disc.gsfc.nasa.gov/datasets/FLDAS_NOAH01_C_GL_M_001/summary?keywords=FLDAS" target="_blank" rel="noreferrer">FLDAS Noah Land Surface Model</a>
+                            </Col>
                         </Row>
                     </footer>
                 </div>
@@ -307,7 +305,9 @@ const CropYield = () => {
                                 <span className="legend-item"><span className="line-sample" style={{ background: '#2b8cbe' }}></span> WRSI ({monthNames[selectedMonth - 1]})</span>
                                 <span className="legend-item"><span className="line-sample dashed" style={{ background: '#de2d26' }}></span> Trend</span>
                             </Col>
-                            <Col className="text-end text-muted small">Source: Supabase crops table</Col>
+                            <Col className="text-end text-muted small">
+                                Source: <a href="https://disc.gsfc.nasa.gov/datasets/FLDAS_NOAH01_C_GL_M_001/summary?keywords=FLDAS" target="_blank" rel="noreferrer">FLDAS Noah Land Surface Model</a>
+                            </Col>
                         </Row>
                     </footer>
                 </div>
@@ -387,7 +387,7 @@ const CropYield = () => {
                                     ))}
                                 </Col>
                                 <Col xs="auto" className="text-muted small align-self-end">
-                                    Source: FAO-56 crop coefficients
+                                    Source: <a href="https://www.fao.org/4/x0490e/x0490e00.htm" target="_blank" rel="noreferrer">FAO-56 crop coefficients</a>
                                 </Col>
                             </Row>
                         </footer>

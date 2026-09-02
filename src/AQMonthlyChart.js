@@ -144,8 +144,18 @@ const AQMonthlyChart = () => {
 
                 <footer>
                     <Row className="justify-content-between">
-                        <Col xs="6">
-                            
+                        <Col>
+                            <div className="air-quality-guage">
+                                {
+                                    airQualityScale.map((item, index) => {
+                                        return (
+                                            <div className="air-quality-guage-segment" key={index} style={{backgroundColor: item.color}}>
+                                                {item.short_label}
+                                            </div>
+                                        )
+                                    })
+                                }
+                            </div>
                         </Col>
                         <Col xs="auto">
                             Data source: <a target="_blank" href="https://ladsweb.modaps.eosdis.nasa.gov/missions-and-measurements/products/MYD08_M3#overview">MODIS</a>

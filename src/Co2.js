@@ -492,58 +492,61 @@ const Co2 = () => {
                         <Col md={4} className="section-info">
                             <h4><a name="air-quality">Air Quality</a></h4>
                             <p>
-                                Aerosol Optical Depth (AOD) data can be used as a proxy to suggest air quality, specifically to infer particulate matter concentrations (like PM2.5). AOD represents the degree to which particles in the atmosphere (dust, smoke, pollutants) prevent sunlight from passing through the atmosphere. Higher AOD values generally indicate higher levels of aerosols, which can correspond to poorer air quality.
+                                Air quality covers a broad range of metrics ranging from the number of observed pollutants in the air to pollen and humidity. It is best measured using calibrated base stations at ground level, but challenges around the presence and availability of these are high. Despite local government mandates, many areas simply don't have measuring stations or fail to maintain them properly.
                             </p>
-                            <p>AOD can be used as a proxy for air quality, with higher values indicating worse air quality. This chart shows the average AOD for the time period.</p>
+                            <p>
+                                Aerosol Optical Depth (AOD) data, as measured by satellite cameras, can be used as an alternative to ground monitoring, specifically to infer particulate matter concentrations (like PM2.5). AOD represents the degree to which particles in the atmosphere (dust, smoke, pollutants) prevent sunlight from passing through the atmosphere. Higher AOD values generally indicate higher levels of aerosols, which can correspond to poorer air quality.
+                            </p>
+                            <p>
+                                Higher values indicating worse air quality. This chart shows maximum, minimum and average AOD for the time period.
+                            </p>
+                            <div className="mt-4 mb-4 info-block">
+                                <h5>Legend</h5>
+                                <div className="small">
+                                    <p>An AOD value between <strong>0 and 100</strong> would be an indication of clean air, minimal aerosols, equivalent to PM2.5 levels under <strong>12 µg/m³</strong> (good air quality).</p>
+                                    <p>An AOD value between <strong>601 and 1000</strong> would indicate significant air pollution, equating to PM2.5 levels between <strong>55–150 µg/m³</strong>, affecting most of the population.</p>
+                                    <p>An AOD value higher than <strong>2000</strong> would indicate extremely high levels of pollution, likely corresponding to events like wildfires or dust storms. PM2.5 values in this range could exceed <strong>250 µg/m³</strong>, severely impacting health and visibility.</p>
+                                </div>
+                            </div>
                             <Accordion className="faq">
                                 <Card>
                                     <Card.Header>
-                                        <ContextAwareToggle eventKey="0">Is Aerosol Optical Depth a reliable indicator?</ContextAwareToggle>
+                                        <ContextAwareToggle eventKey="0">Where does the data come from?</ContextAwareToggle>
                                     </Card.Header>
                                     <Accordion.Collapse eventKey="0">
-                                        <Card.Body>AOD measures air thickness which can indicate the presence of pollutants. AOD by itself does not take into account cloud cover, weather conditions and other factors that might affect the air thickness and should be considered alongside ground-station measurements.</Card.Body>
+                                        <Card.Body>This data is collected by NASA, and shared as part of its <a target="_blank" href="https://ladsweb.modaps.eosdis.nasa.gov/missions-and-measurements/products/MYD08_M3#overview">level-3 atmosphere monthly global product (MYD08_M3) dataset</a>, captured by Moderate Resolution Imaging Spectroradiometer (MODIS) satellites (Aqua and Terra). These satellites take two snapshots a day.</Card.Body>
                                     </Accordion.Collapse>
                                 </Card>
                                 <Card>
                                     <Card.Header>
-                                        <ContextAwareToggle eventKey="1">What unit is AOD measured in?</ContextAwareToggle>
+                                        <ContextAwareToggle eventKey="1">What is PM2.5?</ContextAwareToggle>
                                     </Card.Header>
                                     <Accordion.Collapse eventKey="1">
-                                        <Card.Body>NASA's MODIS satellite data measures AOD on a scale between 0 and 5000. Higher values indicate more light scattering due to aerosols in the atmosphere.</Card.Body>
+                                        <Card.Body>PM2.5 refers to fine, inhalable airborne particles and liquid droplets measuring 2.5 micrometers or smaller (about 30 times thinner than a human hair). It comes from combustion sources like wildfires, vehicle exhaust, industrial burning and cooking, or is formed through atmospheric chemical reactions.</Card.Body>
                                     </Accordion.Collapse>
                                 </Card>
                                 <Card>
                                     <Card.Header>
-                                        <ContextAwareToggle eventKey="2">What is PM2.5?</ContextAwareToggle>
+                                        <ContextAwareToggle eventKey="2">Is AOD a reliable metric?</ContextAwareToggle>
                                     </Card.Header>
                                     <Accordion.Collapse eventKey="2">
-                                        <Card.Body><p>PM2.5 refers to particulate matter that is 2.5 micrometers (µm) or smaller in diameter. These tiny particles are about 30 times smaller than the width of a human hair and can be made up of various substances, including organic chemicals, metals, dust, soot, and liquid droplets.</p>
-
-                                        <p>Because of their small size, PM2.5 particles can be easily inhaled deep into the lungs and even enter the bloodstream, posing significant health risks, especially to the respiratory and cardiovascular systems. Long-term exposure to elevated PM2.5 levels has been linked to serious health issues like asthma, lung disease, heart attacks, and premature death.</p>
-                                        
-                                        <p>An AOD value <strong>between 0 and 100</strong> would be an indication of clean air, minimal aerosols, equivalent to PM2.5 levels under 12 µg/m³ (good air quality).</p>
-                                        <p>An AOD value bwteeen <strong>601 and 1000</strong> would indicate significant air pollution, equating to PM2.5 levels between 55–150 µg/m³, affecting most of the population.</p>
-                                        <p>An AOD value <strong>higher than 2000</strong> would indicate extremely high levels of pollution, likely corresponding to events like wildfires or dust storms. PM2.5 values in this range could exceed 250 µg/m³, severely impacting health and visibility.</p>
-                                        
-                                        </Card.Body>
+                                        <Card.Body><p>AOD measures air thickness which can indicate the presence of pollutants, but it does not measure them directly. Modelling and analysis keeps accuracy high, but it can drop to less than 70% accuracy in some instances. AOD by itself does not take into account cloud cover, weather conditions and other factors that might affect the air thickness, for example coastal areas may show higher than expected PM2.5 due to salt spray or harmless expansion of small molecules which absorb water. In addition, the physical grid size may cover areas of high pollution and low pollution, which are averaged together (such as an industrial port and open ocean).</p>
+                                        <p>In addition, MODIS satellites cannot capture data through clouds.</p></Card.Body>
                                     </Accordion.Collapse>
                                 </Card>
                                 <Card>
                                     <Card.Header>
-                                        <ContextAwareToggle eventKey="3">How can I get details about specific pollutants??</ContextAwareToggle>
+                                        <ContextAwareToggle eventKey="3">How can I use this data?</ContextAwareToggle>
                                     </Card.Header>
                                     <Accordion.Collapse eventKey="3">
-                                        <Card.Body><p>As discussed, this data is a proxy for air quality, but more accurate information about different gases and particles can be obtained from sensor networks, the largest of which is at <a target="_blank" href="https://www.aqicn.org/">www.aqicn.org</a>. We will be including this data in future iterations of the Africa Climate Observer.</p>
-                                        
-                                        </Card.Body>
+                                        <Card.Body>AOD can help point to trends over time, and help journalists and researchers to build evidence pointing to the impact of factors like climate change, urbanisation, mines or wildfires on health, the environment and more. It can be used to help direct investigations, but shouldn't be relied on as sole proof of AQ-related issues.</Card.Body>
                                     </Accordion.Collapse>
                                 </Card>
                             </Accordion>
                         </Col>
                         <Col>
-                            <AQChart />
-                            {/* <AirQualityMap /> */}
                             <div className="mt-4">
+                                <AQChart/>
                                 <AQMonthlyChart />
                             </div>
                         </Col>
@@ -567,36 +570,51 @@ const Co2 = () => {
                         <Col md={4} className="section-info">
                             <h4><a name="crop-yield">Water Requirement Satisfaction Index</a></h4>
                             <p>
-                                Water stress is a key factor in crop health. The Water Requirement Satisfaction Index (WRSI) is a widely used metric to assess this. WRSI compares the amount of water available to crops with the amount they need for optimal growth. A WRSI value of 100% indicates that crops are receiving all the water they require, while values below 100% suggest varying levels of water stress.
+                                Water stress is a key factor in crop health. The Water Requirement Satisfaction Index (WRSI) is a widely used metric to assess this. WSRI is calculated as a score out of 100, where 100 means the crop has all the water it needs to thrive. It must be calculated separately for different crops.
                             </p>
+                            <p><strong>
+                                The data is modeled and not directly observed, so it should be used as a guide to understanding patterns of water stress rather than an exact measurement of conditions on the ground.
+                            </strong></p>
                             <Accordion className="faq">
                                 <Card>
                                     <Card.Header>
-                                        <ContextAwareToggle eventKey="0">How is WRSI calculated?</ContextAwareToggle>
+                                        <ContextAwareToggle eventKey="0">What does the main chart show?</ContextAwareToggle>
                                     </Card.Header>
                                     <Accordion.Collapse eventKey="0">
                                         <Card.Body>
-                                        <p>WRSI is calculated using the formula:</p><p><strong>WRSI = (Water Available / Water Required) * 100</strong>.</p><p>Water Available is typically derived from rainfall data, while Water Required is based on the specific water needs of the crop being assessed, which can vary depending on the growth stage and environmental conditions.</p> <p>This data is calculated from the detailed <a href="https://disc.gsfc.nasa.gov/datasets/FLDAS_NOAH01_C_GL_M_001/summary?keywords=FLDAS" target="_blank">FLDAS dataset</a>, which combines rainfall data with soil moisture and crop water requirements to provide a comprehensive picture of water stress for crops across Africa.</p><p><strong>The data is modeled and not directly observed, so it should be used as a guide to understanding patterns of water stress rather than an exact measurement of conditions on the ground.</strong></p>
+                                            <p>The main chart here shows the WSRI for a reference grass, based on the location and date range selected. You can use it to understand changing patterns in water availability over time, and potentially to infer future trends based on historical data.</p>
+                                            <p>The key formula used to calculate WSRI is</p>
+                                            <p><strong>WRSI = (Water Available / Water Required) * 100.</strong></p>
                                         </Card.Body>
                                     </Accordion.Collapse>
                                 </Card>
                                 <Card>
                                     <Card.Header>
-                                        <ContextAwareToggle eventKey="1">What does a WRSI value of 50% mean?</ContextAwareToggle>
+                                        <ContextAwareToggle eventKey="1">Where does the data come from?</ContextAwareToggle>
                                     </Card.Header>
                                     <Accordion.Collapse eventKey="1">
-                                        <Card.Body>A WRSI value of 50% indicates that crops are receiving only half of the water they require for optimal growth. Low WRSI values are indicative of reduced yield and potential crop failures.</Card.Body>
+                                        <Card.Body>
+                                            <p>This data is calculated from NASA’s detailed <a href="https://disc.gsfc.nasa.gov/datasets/FLDAS_NOAH01_C_GL_M_001/summary?keywords=FLDAS" target="_blank" rel="noreferrer">FLDAS dataset</a>, which combines rainfall data with soil moisture and crop water requirements to provide a comprehensive picture of water stress for crops across Africa.</p>
+                                        </Card.Body>
                                     </Accordion.Collapse>
                                 </Card>
                                 <Card>
                                     <Card.Header>
-                                        <ContextAwareToggle eventKey="2">How are crop-specific WRSI values calculated?</ContextAwareToggle>
+                                        <ContextAwareToggle eventKey="2">How can I use this data?</ContextAwareToggle>
                                     </Card.Header>
                                     <Accordion.Collapse eventKey="2">
                                         <Card.Body>
-                                            <p>Crop-specific WRSI values are calculated using the same formula as the general WRSI, but with data specific to the crop in question. This includes the crop's water requirements at different growth stages, as well as localized rainfall and soil moisture data. By using crop-specific data, the WRSI can more accurately reflect the water stress experienced by different crops in varying environmental conditions.</p>
-                                            <p>The table shows a variety of crops, but it does not imply that the selected area has all of these crops present and should be used as reference only.</p>
-
+                                            <p>You can use this data to analyse changes in the available water for a region over time. It’s best to select months based on the growing season for the crop in question. It can help non-experts to understand if issues with crop yield are water related.</p>
+                                        </Card.Body>
+                                    </Accordion.Collapse>
+                                </Card>
+                                <Card>
+                                    <Card.Header>
+                                        <ContextAwareToggle eventKey="3">How are crop specific values calculated?</ContextAwareToggle>
+                                    </Card.Header>
+                                    <Accordion.Collapse eventKey="3">
+                                        <Card.Body>
+                                            <p>Crop specific values are shown as an example of what kinds of crops would be under stress in the chosen area. The table does not show crops that are specific to the region selected. Crop WSRI values can be calculated individually, or by applying a multiplier to the standardised WSRI figure shown in the first table. For example, tomatoes require 15% more water than the based crop, millet, so the base WSRI is multiple by 1.15 to find the WSRI for tomatoes.</p>
                                         </Card.Body>
                                     </Accordion.Collapse>
                                 </Card>
