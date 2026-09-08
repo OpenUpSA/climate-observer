@@ -28,7 +28,7 @@
     "react-dom": "^18.2.0",
     "react-html-parser": "^2.0.2",
     "react-leaflet": "^4.2.1",
-    "react-router-dom": "^6.21.3",
+    "react-router-dom": "^6.30.6",
     "react-vis": "1.11.12",
     "reaviz": "^16.1.4",
     "recharts": "^2.10.4",
