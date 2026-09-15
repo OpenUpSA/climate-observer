@@ -37,7 +37,7 @@ import AQChart from './AQChart';
 import AQMap from './AQMap';
 
 // CROPS
-import CropYield from './CropYield';
+import CropYield, { DEFAULT_CROP, getCrop } from './CropYield';
 
 
 import SocialShare from './SocialShare';
@@ -48,6 +48,11 @@ import './app.scss';
 const Co2 = () => {
 
     const { cities, city, country, convertCountry, address, dateRange, changeDateRange, airQuality } = useContext(AppContext);
+
+    // Shared with the crop charts so the copy below always describes the crop
+    // currently selected in the dropdowns
+    const [crop, setCrop] = useState(DEFAULT_CROP);
+    const selectedCrop = getCrop(crop);
 
 
     useEffect(() => {
@@ -570,7 +575,10 @@ const Co2 = () => {
                         <Col md={4} className="section-info">
                             <h4><a name="crop-yield">Water Requirement Satisfaction Index</a></h4>
                             <p>
-                                Water stress is a key factor in crop health. The Water Requirement Satisfaction Index (WRSI) is a widely used metric to assess this. WSRI is calculated as a score out of 100, where 100 means the crop has all the water it needs to thrive. It must be calculated separately for different crops.
+                                Water stress is a key factor in crop health. The Water Requirement Satisfaction Index (WRSI) is a widely used metric to assess this. WRSI is calculated as a score out of 100, where 100 means the crop has all the water it needs to thrive, and it is calculated separately for each crop.
+                            </p>
+                            <p>
+                                You are currently viewing <strong>{selectedCrop.name}</strong>. Use the crop selector above either chart to switch crop.
                             </p>
                             <p><strong>
                                 The data is modeled and not directly observed, so it should be used as a guide to understanding patterns of water stress rather than an exact measurement of conditions on the ground.
@@ -582,8 +590,8 @@ const Co2 = () => {
                                     </Card.Header>
                                     <Accordion.Collapse eventKey="0">
                                         <Card.Body>
-                                            <p>The main chart here shows the WSRI for a reference grass, based on the location and date range selected. You can use it to understand changing patterns in water availability over time, and potentially to infer future trends based on historical data.</p>
-                                            <p>The key formula used to calculate WSRI is</p>
+                                            <p>The charts here show the WRSI for <strong>{selectedCrop.name}</strong> (Kc<sub>mid</sub> {selectedCrop.kc_mid.toFixed(2)}), based on the location and date range selected. You can use them to understand changing patterns in water availability over time, and potentially to infer future trends based on historical data.</p>
+                                            <p>The key formula used to calculate WRSI is</p>
                                             <p><strong>WRSI = (Water Available / Water Required) * 100.</strong></p>
                                         </Card.Body>
                                     </Accordion.Collapse>
@@ -614,14 +622,15 @@ const Co2 = () => {
                                     </Card.Header>
                                     <Accordion.Collapse eventKey="3">
                                         <Card.Body>
-                                            <p>Crop specific values are shown as an example of what kinds of crops would be under stress in the chosen area. The table does not show crops that are specific to the region selected. Crop WSRI values can be calculated individually, or by applying a multiplier to the standardised WSRI figure shown in the first table. For example, tomatoes require 15% more water than the based crop, millet, so the base WSRI is multiple by 1.15 to find the WSRI for tomatoes.</p>
+                                            <p>Every crop needs a different amount of water, and each one has a crop coefficient (Kc<sub>mid</sub>) from <a href="https://www.fao.org/4/x0490e/x0490e00.htm" target="_blank" rel="noreferrer">FAO-56</a> that compares its demand to the standardised figure the index is based on. The charts divide that standardised figure by the selected crop's Kc<sub>mid</sub>, so a crop that needs more water scores lower in the same conditions.</p>
+                                            <p>The crops listed are examples of common crops rather than the crops grown in the region selected. You are currently viewing <strong>{selectedCrop.name}</strong>, which has a Kc<sub>mid</sub> of {selectedCrop.kc_mid.toFixed(2)}: a standardised index of 70 works out at <strong>{(70 / selectedCrop.kc_mid).toFixed(1)}</strong> for this crop.</p>
                                         </Card.Body>
                                     </Accordion.Collapse>
                                 </Card>
                             </Accordion>
                         </Col>
                         <Col>
-                            <CropYield />
+                            <CropYield crop={crop} onCropChange={setCrop} />
                         </Col>
                     </Row>
                 </Container>

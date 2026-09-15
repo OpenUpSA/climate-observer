@@ -348,7 +348,10 @@ export const AppProvider = ({ children }) => {
 
     }
 
-    async function downloadData(type, set, month = null) {
+    // `payload` carries data that is built in a component rather than from the
+    // shared datasets, e.g. the crop charts (which scale WRSI by the selected
+    // crop's Kc mid) pass the rows they plot.
+    async function downloadData(type, set, month = null, payload = null) {
 
         if (type == 'png') {
 
@@ -443,6 +446,21 @@ export const AppProvider = ({ children }) => {
                 currentData.forEach(record => {
                     csvContent += record.year + ',' + monthNames[record.month_number - 1] + ',' + record.precip + ',' + record.precip_hist + '\n';
                 });
+            } else if (set == 'crop-annual' || set == 'crop-monthly-breakdown') {
+                // Crop charts are built in CropYield from the `crops` table and scaled
+                // by the selected crop's Kc mid, so the plotted rows come in via payload.
+                const rows = payload?.rows || [];
+                const cropLabel = payload?.crop ? ` (${payload.crop})` : '';
+                const row = r => r.year + ',' + r.value + ',' + (r.trend ?? '') + '\n';
+
+                if (set == 'crop-monthly-breakdown') {
+                    csvContent += `Month,Year,WRSI${cropLabel},Trend\n`;
+                    rows.forEach(r => { csvContent += monthNames[month - 1] + ',' + row(r); });
+                    month = monthNames[month - 1] ?? null; // takes a 1-based month number
+                } else {
+                    csvContent += `Year,WRSI${cropLabel},Trend\n`;
+                    rows.forEach(r => { csvContent += row(r); });
+                }
             }
 
             // save the csvContent to a file and download
@@ -450,10 +468,15 @@ export const AppProvider = ({ children }) => {
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
 
+            // Crop chart downloads for different crops would otherwise share a filename
+            const cropSuffix = payload?.crop
+                ? '-' + payload.crop.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+                : '';
+
             if (city != 'location') {
-                link.setAttribute("download", `${set}${month != null ? '-' + month : ''}.${city}.${dateRange[0]}-${dateRange[1]}.csv`);
+                link.setAttribute("download", `${set}${month != null ? '-' + month : ''}${cropSuffix}.${city}.${dateRange[0]}-${dateRange[1]}.csv`);
             } else {
-                link.setAttribute("download", `${set}${month != null ? '-' + month : ''}.${position[0]},${position[1]}.${dateRange[0]}-${dateRange[1]}.csv`);
+                link.setAttribute("download", `${set}${month != null ? '-' + month : ''}${cropSuffix}.${position[0]},${position[1]}.${dateRange[0]}-${dateRange[1]}.csv`);
             }
             document.body.appendChild(link);
             link.click();

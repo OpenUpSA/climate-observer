@@ -207,11 +207,11 @@
       });
     }
   }
-})({"eiPiS":[function(require,module,exports,__globalThis) {
+})({"baKTK":[function(require,module,exports,__globalThis) {
 var global = arguments[3];
 var HMR_HOST = null;
 var HMR_PORT = null;
-var HMR_SERVER_PORT = 45465;
+var HMR_SERVER_PORT = 38381;
 var HMR_SECURE = false;
 var HMR_ENV_HASH = "439701173a9199ea";
 var HMR_USE_SSE = false;
@@ -25345,7 +25345,10 @@ const AppProvider = ({ children })=>{
         getPrecipData();
         getAQData();
     }
-    async function downloadData(type, set, month = null) {
+    // `payload` carries data that is built in a component rather than from the
+    // shared datasets, e.g. the crop charts (which scale WRSI by the selected
+    // crop's Kc mid) pass the rows they plot.
+    async function downloadData(type, set, month = null, payload = null) {
         if (type == 'png') {
             let svgContainer = document.getElementById(set);
             let svg = svgContainer.getElementsByTagName('svg')[0];
@@ -25418,13 +25421,33 @@ const AppProvider = ({ children })=>{
                 currentData.forEach((record)=>{
                     csvContent += record.year + ',' + monthNames[record.month_number - 1] + ',' + record.precip + ',' + record.precip_hist + '\n';
                 });
+            } else if (set == 'crop-annual' || set == 'crop-monthly-breakdown') {
+                // Crop charts are built in CropYield from the `crops` table and scaled
+                // by the selected crop's Kc mid, so the plotted rows come in via payload.
+                const rows = payload?.rows || [];
+                const cropLabel = payload?.crop ? ` (${payload.crop})` : '';
+                const row = (r)=>r.year + ',' + r.value + ',' + (r.trend ?? '') + '\n';
+                if (set == 'crop-monthly-breakdown') {
+                    csvContent += `Month,Year,WRSI${cropLabel},Trend\n`;
+                    rows.forEach((r)=>{
+                        csvContent += monthNames[month - 1] + ',' + row(r);
+                    });
+                    month = monthNames[month - 1] ?? null; // takes a 1-based month number
+                } else {
+                    csvContent += `Year,WRSI${cropLabel},Trend\n`;
+                    rows.forEach((r)=>{
+                        csvContent += row(r);
+                    });
+                }
             }
             // save the csvContent to a file and download
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
-            if (city != 'location') link.setAttribute("download", `${set}${month != null ? '-' + month : ''}.${city}.${dateRange[0]}-${dateRange[1]}.csv`);
-            else link.setAttribute("download", `${set}${month != null ? '-' + month : ''}.${position[0]},${position[1]}.${dateRange[0]}-${dateRange[1]}.csv`);
+            // Crop chart downloads for different crops would otherwise share a filename
+            const cropSuffix = payload?.crop ? '-' + payload.crop.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') : '';
+            if (city != 'location') link.setAttribute("download", `${set}${month != null ? '-' + month : ''}${cropSuffix}.${city}.${dateRange[0]}-${dateRange[1]}.csv`);
+            else link.setAttribute("download", `${set}${month != null ? '-' + month : ''}${cropSuffix}.${position[0]},${position[1]}.${dateRange[0]}-${dateRange[1]}.csv`);
             document.body.appendChild(link);
             link.click();
         }
@@ -25667,7 +25690,7 @@ const AppProvider = ({ children })=>{
         children: children
     }, void 0, false, {
         fileName: "src/AppProvider.js",
-        lineNumber: 861,
+        lineNumber: 884,
         columnNumber: 9
     }, undefined);
 };
@@ -64735,6 +64758,10 @@ const Co2 = ()=>{
     _s();
     var _s1 = $RefreshSig$();
     const { cities, city, country, convertCountry, address, dateRange, changeDateRange, airQuality } = (0, _react.useContext)((0, _appContext.AppContext));
+    // Shared with the crop charts so the copy below always describes the crop
+    // currently selected in the dropdowns
+    const [crop, setCrop] = (0, _react.useState)((0, _cropYield.DEFAULT_CROP));
+    const selectedCrop = (0, _cropYield.getCrop)(crop);
     (0, _react.useEffect)(()=>{
         const navbar = document.querySelector('.navbar');
         const handleScroll = ()=>{
@@ -64759,7 +64786,7 @@ const Co2 = ()=>{
                     children: children
                 }, void 0, false, {
                     fileName: "src/Co2.js",
-                    lineNumber: 89,
+                    lineNumber: 94,
                     columnNumber: 17
                 }, undefined),
                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _colDefault.default), {
@@ -64767,13 +64794,13 @@ const Co2 = ()=>{
                     children: isCurrentEventKey ? '-' : '+'
                 }, void 0, false, {
                     fileName: "src/Co2.js",
-                    lineNumber: 92,
+                    lineNumber: 97,
                     columnNumber: 17
                 }, undefined)
             ]
         }, void 0, true, {
             fileName: "src/Co2.js",
-            lineNumber: 88,
+            lineNumber: 93,
             columnNumber: 13
         }, undefined);
     };
@@ -64789,7 +64816,7 @@ const Co2 = ()=>{
                 children: [
                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _locationBarDefault.default), {}, void 0, false, {
                         fileName: "src/Co2.js",
-                        lineNumber: 107,
+                        lineNumber: 112,
                         columnNumber: 17
                     }, undefined),
                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
@@ -64807,31 +64834,31 @@ const Co2 = ()=>{
                                                     children: "The Africa Data Hub Climate Observer"
                                                 }, void 0, false, {
                                                     fileName: "src/Co2.js",
-                                                    lineNumber: 113,
+                                                    lineNumber: 118,
                                                     columnNumber: 33
                                                 }, undefined),
                                                 " is designed to help journalists and academics reporting and researching climate change in Africa."
                                             ]
                                         }, void 0, true, {
                                             fileName: "src/Co2.js",
-                                            lineNumber: 112,
+                                            lineNumber: 117,
                                             columnNumber: 29
                                         }, undefined),
                                         /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _locationInfoPanelDefault.default), {}, void 0, false, {
                                             fileName: "src/Co2.js",
-                                            lineNumber: 116,
+                                            lineNumber: 121,
                                             columnNumber: 29
                                         }, undefined),
                                         /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
                                             className: "mt-5",
                                             children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _socialShareDefault.default), {}, void 0, false, {
                                                 fileName: "src/Co2.js",
-                                                lineNumber: 118,
+                                                lineNumber: 123,
                                                 columnNumber: 33
                                             }, undefined)
                                         }, void 0, false, {
                                             fileName: "src/Co2.js",
-                                            lineNumber: 117,
+                                            lineNumber: 122,
                                             columnNumber: 29
                                         }, undefined),
                                         /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
@@ -64842,48 +64869,48 @@ const Co2 = ()=>{
                                                     children: "1x1 degree latitude and longitude"
                                                 }, void 0, false, {
                                                     fileName: "src/Co2.js",
-                                                    lineNumber: 122,
+                                                    lineNumber: 127,
                                                     columnNumber: 87
                                                 }, undefined),
                                                 " and all positions are rounded to the nearest 1x1 square. These squares are approximately 100km x 100km in size."
                                             ]
                                         }, void 0, true, {
                                             fileName: "src/Co2.js",
-                                            lineNumber: 121,
+                                            lineNumber: 126,
                                             columnNumber: 29
                                         }, undefined)
                                     ]
                                 }, void 0, true, {
                                     fileName: "src/Co2.js",
-                                    lineNumber: 111,
+                                    lineNumber: 116,
                                     columnNumber: 25
                                 }, undefined),
                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _colDefault.default), {
                                     children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _navigatorDefault.default), {}, void 0, false, {
                                         fileName: "src/Co2.js",
-                                        lineNumber: 126,
+                                        lineNumber: 131,
                                         columnNumber: 29
                                     }, undefined)
                                 }, void 0, false, {
                                     fileName: "src/Co2.js",
-                                    lineNumber: 125,
+                                    lineNumber: 130,
                                     columnNumber: 25
                                 }, undefined)
                             ]
                         }, void 0, true, {
                             fileName: "src/Co2.js",
-                            lineNumber: 110,
+                            lineNumber: 115,
                             columnNumber: 21
                         }, undefined)
                     }, void 0, false, {
                         fileName: "src/Co2.js",
-                        lineNumber: 109,
+                        lineNumber: 114,
                         columnNumber: 17
                     }, undefined)
                 ]
             }, void 0, true, {
                 fileName: "src/Co2.js",
-                lineNumber: 105,
+                lineNumber: 110,
                 columnNumber: 13
             }, undefined),
             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _navbarDefault.default), {
@@ -64903,12 +64930,12 @@ const Co2 = ()=>{
                                                 children: "Jump to section:"
                                             }, void 0, false, {
                                                 fileName: "src/Co2.js",
-                                                lineNumber: 140,
+                                                lineNumber: 145,
                                                 columnNumber: 69
                                             }, undefined)
                                         }, void 0, false, {
                                             fileName: "src/Co2.js",
-                                            lineNumber: 140,
+                                            lineNumber: 145,
                                             columnNumber: 37
                                         }, undefined),
                                         /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _colDefault.default), {
@@ -64922,14 +64949,14 @@ const Co2 = ()=>{
                                                             size: 1
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 142,
+                                                            lineNumber: 147,
                                                             columnNumber: 93
                                                         }, undefined),
                                                         " Temperature"
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "src/Co2.js",
-                                                    lineNumber: 142,
+                                                    lineNumber: 147,
                                                     columnNumber: 41
                                                 }, undefined),
                                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("a", {
@@ -64941,14 +64968,14 @@ const Co2 = ()=>{
                                                             size: 1
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 143,
+                                                            lineNumber: 148,
                                                             columnNumber: 90
                                                         }, undefined),
                                                         " Rainfall"
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "src/Co2.js",
-                                                    lineNumber: 143,
+                                                    lineNumber: 148,
                                                     columnNumber: 41
                                                 }, undefined),
                                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("a", {
@@ -64960,14 +64987,14 @@ const Co2 = ()=>{
                                                             size: 1
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 144,
+                                                            lineNumber: 149,
                                                             columnNumber: 92
                                                         }, undefined),
                                                         " Air Quality"
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "src/Co2.js",
-                                                    lineNumber: 144,
+                                                    lineNumber: 149,
                                                     columnNumber: 41
                                                 }, undefined),
                                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("a", {
@@ -64979,14 +65006,14 @@ const Co2 = ()=>{
                                                             size: 1
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 145,
+                                                            lineNumber: 150,
                                                             columnNumber: 87
                                                         }, undefined),
                                                         " Crops"
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "src/Co2.js",
-                                                    lineNumber: 145,
+                                                    lineNumber: 150,
                                                     columnNumber: 41
                                                 }, undefined),
                                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("a", {
@@ -64998,31 +65025,31 @@ const Co2 = ()=>{
                                                             size: 1
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 146,
+                                                            lineNumber: 151,
                                                             columnNumber: 91
                                                         }, undefined),
                                                         " Land cover"
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "src/Co2.js",
-                                                    lineNumber: 146,
+                                                    lineNumber: 151,
                                                     columnNumber: 41
                                                 }, undefined)
                                             ]
                                         }, void 0, true, {
                                             fileName: "src/Co2.js",
-                                            lineNumber: 141,
+                                            lineNumber: 146,
                                             columnNumber: 37
                                         }, undefined)
                                     ]
                                 }, void 0, true, {
                                     fileName: "src/Co2.js",
-                                    lineNumber: 139,
+                                    lineNumber: 144,
                                     columnNumber: 33
                                 }, undefined)
                             }, void 0, false, {
                                 fileName: "src/Co2.js",
-                                lineNumber: 138,
+                                lineNumber: 143,
                                 columnNumber: 29
                             }, undefined),
                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _colDefault.default), {
@@ -65036,12 +65063,12 @@ const Co2 = ()=>{
                                                 children: "Adjust date range:"
                                             }, void 0, false, {
                                                 fileName: "src/Co2.js",
-                                                lineNumber: 153,
+                                                lineNumber: 158,
                                                 columnNumber: 41
                                             }, undefined)
                                         }, void 0, false, {
                                             fileName: "src/Co2.js",
-                                            lineNumber: 152,
+                                            lineNumber: 157,
                                             columnNumber: 37
                                         }, undefined),
                                         /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _colDefault.default), {
@@ -65059,18 +65086,18 @@ const Co2 = ()=>{
                                                         children: year
                                                     }, year, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 160,
+                                                        lineNumber: 165,
                                                         columnNumber: 60
                                                     }, undefined);
                                                 })
                                             }, void 0, false, {
                                                 fileName: "src/Co2.js",
-                                                lineNumber: 156,
+                                                lineNumber: 161,
                                                 columnNumber: 41
                                             }, undefined)
                                         }, void 0, false, {
                                             fileName: "src/Co2.js",
-                                            lineNumber: 155,
+                                            lineNumber: 160,
                                             columnNumber: 37
                                         }, undefined),
                                         /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _colDefault.default), {
@@ -65080,12 +65107,12 @@ const Co2 = ()=>{
                                                 children: "TO"
                                             }, void 0, false, {
                                                 fileName: "src/Co2.js",
-                                                lineNumber: 165,
+                                                lineNumber: 170,
                                                 columnNumber: 69
                                             }, undefined)
                                         }, void 0, false, {
                                             fileName: "src/Co2.js",
-                                            lineNumber: 165,
+                                            lineNumber: 170,
                                             columnNumber: 37
                                         }, undefined),
                                         /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _colDefault.default), {
@@ -65103,45 +65130,45 @@ const Co2 = ()=>{
                                                         children: year
                                                     }, year, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 171,
+                                                        lineNumber: 176,
                                                         columnNumber: 60
                                                     }, undefined);
                                                 })
                                             }, void 0, false, {
                                                 fileName: "src/Co2.js",
-                                                lineNumber: 167,
+                                                lineNumber: 172,
                                                 columnNumber: 41
                                             }, undefined)
                                         }, void 0, false, {
                                             fileName: "src/Co2.js",
-                                            lineNumber: 166,
+                                            lineNumber: 171,
                                             columnNumber: 37
                                         }, undefined)
                                     ]
                                 }, void 0, true, {
                                     fileName: "src/Co2.js",
-                                    lineNumber: 151,
+                                    lineNumber: 156,
                                     columnNumber: 33
                                 }, undefined)
                             }, void 0, false, {
                                 fileName: "src/Co2.js",
-                                lineNumber: 150,
+                                lineNumber: 155,
                                 columnNumber: 29
                             }, undefined)
                         ]
                     }, void 0, true, {
                         fileName: "src/Co2.js",
-                        lineNumber: 137,
+                        lineNumber: 142,
                         columnNumber: 25
                     }, undefined)
                 }, void 0, false, {
                     fileName: "src/Co2.js",
-                    lineNumber: 135,
+                    lineNumber: 140,
                     columnNumber: 21
                 }, undefined)
             }, void 0, false, {
                 fileName: "src/Co2.js",
-                lineNumber: 133,
+                lineNumber: 138,
                 columnNumber: 17
             }, undefined),
             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _containerDefault.default), {
@@ -65156,29 +65183,29 @@ const Co2 = ()=>{
                                     size: 1
                                 }, void 0, false, {
                                     fileName: "src/Co2.js",
-                                    lineNumber: 187,
+                                    lineNumber: 192,
                                     columnNumber: 47
                                 }, undefined),
                                 " Temperature"
                             ]
                         }, void 0, true, {
                             fileName: "src/Co2.js",
-                            lineNumber: 187,
+                            lineNumber: 192,
                             columnNumber: 25
                         }, undefined)
                     }, void 0, false, {
                         fileName: "src/Co2.js",
-                        lineNumber: 187,
+                        lineNumber: 192,
                         columnNumber: 21
                     }, undefined)
                 }, void 0, false, {
                     fileName: "src/Co2.js",
-                    lineNumber: 186,
+                    lineNumber: 191,
                     columnNumber: 17
                 }, undefined)
             }, void 0, false, {
                 fileName: "src/Co2.js",
-                lineNumber: 185,
+                lineNumber: 190,
                 columnNumber: 13
             }, undefined),
             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _containerDefault.default), {
@@ -65197,12 +65224,12 @@ const Co2 = ()=>{
                                             children: "Average Monthly Temperature"
                                         }, void 0, false, {
                                             fileName: "src/Co2.js",
-                                            lineNumber: 197,
+                                            lineNumber: 202,
                                             columnNumber: 33
                                         }, undefined)
                                     }, void 0, false, {
                                         fileName: "src/Co2.js",
-                                        lineNumber: 197,
+                                        lineNumber: 202,
                                         columnNumber: 29
                                     }, undefined),
                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("p", {
@@ -65215,14 +65242,14 @@ const Co2 = ()=>{
                                         ]
                                     }, void 0, true, {
                                         fileName: "src/Co2.js",
-                                        lineNumber: 198,
+                                        lineNumber: 203,
                                         columnNumber: 29
                                     }, undefined),
                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("h5", {
                                         children: "Frequently Asked Questions"
                                     }, void 0, false, {
                                         fileName: "src/Co2.js",
-                                        lineNumber: 201,
+                                        lineNumber: 206,
                                         columnNumber: 29
                                     }, undefined),
                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _accordionDefault.default), {
@@ -65236,12 +65263,12 @@ const Co2 = ()=>{
                                                             children: "Where does this data come from?"
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 206,
+                                                            lineNumber: 211,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 205,
+                                                        lineNumber: 210,
                                                         columnNumber: 37
                                                     }, undefined),
                                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _accordionDefault.default).Collapse, {
@@ -65254,24 +65281,24 @@ const Co2 = ()=>{
                                                                     children: "It's important to remember that a lot of the data is modelled rather than directly observed, which means the data for a specific location may be calculated based on measurements taken nearby, and other sources may differ in their estimations of temperature."
                                                                 }, void 0, false, {
                                                                     fileName: "src/Co2.js",
-                                                                    lineNumber: 209,
+                                                                    lineNumber: 214,
                                                                     columnNumber: 359
                                                                 }, undefined)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 209,
+                                                            lineNumber: 214,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 208,
+                                                        lineNumber: 213,
                                                         columnNumber: 37
                                                     }, undefined)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "src/Co2.js",
-                                                lineNumber: 204,
+                                                lineNumber: 209,
                                                 columnNumber: 33
                                             }, undefined),
                                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _cardDefault.default), {
@@ -65282,12 +65309,12 @@ const Co2 = ()=>{
                                                             children: "How is the historical average calculated?"
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 215,
+                                                            lineNumber: 220,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 214,
+                                                        lineNumber: 219,
                                                         columnNumber: 37
                                                     }, undefined),
                                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _accordionDefault.default).Collapse, {
@@ -65296,18 +65323,18 @@ const Co2 = ()=>{
                                                             children: "Many climatologists use historical averages to compare temperatures, and usually take an average of a 30 year period. In our case, the historical average calculated over the period 1950-1980 - and there are very few months in the last 30 years which have been below that measurement."
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 218,
+                                                            lineNumber: 223,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 217,
+                                                        lineNumber: 222,
                                                         columnNumber: 37
                                                     }, undefined)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "src/Co2.js",
-                                                lineNumber: 213,
+                                                lineNumber: 218,
                                                 columnNumber: 33
                                             }, undefined),
                                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _cardDefault.default), {
@@ -65318,12 +65345,12 @@ const Co2 = ()=>{
                                                             children: "How do I use this chart?"
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 223,
+                                                            lineNumber: 228,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 222,
+                                                        lineNumber: 227,
                                                         columnNumber: 37
                                                     }, undefined),
                                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _accordionDefault.default).Collapse, {
@@ -65332,18 +65359,18 @@ const Co2 = ()=>{
                                                             children: "This chart can help you quickly identify key temperature metrics for any given place in Africa, for any month. You can compare the temperature today, for example, with a past date to understand whether or not it is unusually hot or cold."
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 226,
+                                                            lineNumber: 231,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 225,
+                                                        lineNumber: 230,
                                                         columnNumber: 37
                                                     }, undefined)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "src/Co2.js",
-                                                lineNumber: 221,
+                                                lineNumber: 226,
                                                 columnNumber: 33
                                             }, undefined),
                                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _cardDefault.default), {
@@ -65354,12 +65381,12 @@ const Co2 = ()=>{
                                                             children: "Should I embed this chart for readers?"
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 231,
+                                                            lineNumber: 236,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 230,
+                                                        lineNumber: 235,
                                                         columnNumber: 37
                                                     }, undefined),
                                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _accordionDefault.default).Collapse, {
@@ -65368,57 +65395,57 @@ const Co2 = ()=>{
                                                             children: "Probably not, if we're honest. It's hard to decipher any narrative in this chart without close inspection, and the only easy to understand story is that the year has seasons. Seeing the impact of global heating is here is not easy. It's a data explorer, not a storytelling device."
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 234,
+                                                            lineNumber: 239,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 233,
+                                                        lineNumber: 238,
                                                         columnNumber: 37
                                                     }, undefined)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "src/Co2.js",
-                                                lineNumber: 229,
+                                                lineNumber: 234,
                                                 columnNumber: 33
                                             }, undefined)
                                         ]
                                     }, void 0, true, {
                                         fileName: "src/Co2.js",
-                                        lineNumber: 203,
+                                        lineNumber: 208,
                                         columnNumber: 29
                                     }, undefined)
                                 ]
                             }, void 0, true, {
                                 fileName: "src/Co2.js",
-                                lineNumber: 194,
+                                lineNumber: 199,
                                 columnNumber: 25
                             }, undefined),
                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _colDefault.default), {
                                 children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _tempmonthlyAverageChartDefault.default), {}, void 0, false, {
                                     fileName: "src/Co2.js",
-                                    lineNumber: 241,
+                                    lineNumber: 246,
                                     columnNumber: 29
                                 }, undefined)
                             }, void 0, false, {
                                 fileName: "src/Co2.js",
-                                lineNumber: 240,
+                                lineNumber: 245,
                                 columnNumber: 25
                             }, undefined)
                         ]
                     }, void 0, true, {
                         fileName: "src/Co2.js",
-                        lineNumber: 193,
+                        lineNumber: 198,
                         columnNumber: 21
                     }, undefined)
                 }, void 0, false, {
                     fileName: "src/Co2.js",
-                    lineNumber: 192,
+                    lineNumber: 197,
                     columnNumber: 17
                 }, undefined)
             }, void 0, false, {
                 fileName: "src/Co2.js",
-                lineNumber: 191,
+                lineNumber: 196,
                 columnNumber: 13
             }, undefined),
             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _containerDefault.default), {
@@ -65437,26 +65464,26 @@ const Co2 = ()=>{
                                             children: "Monthly Temperature Breakdown"
                                         }, void 0, false, {
                                             fileName: "src/Co2.js",
-                                            lineNumber: 253,
+                                            lineNumber: 258,
                                             columnNumber: 33
                                         }, undefined)
                                     }, void 0, false, {
                                         fileName: "src/Co2.js",
-                                        lineNumber: 253,
+                                        lineNumber: 258,
                                         columnNumber: 29
                                     }, undefined),
                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("p", {
                                         children: "To make the temperature data a little easier to communicate, we've broken it down by months in this chart. Comparing the average monthly temperature for every August for the last 30 years, for example, is more visually revealing than looking at all the data for all seasons."
                                     }, void 0, false, {
                                         fileName: "src/Co2.js",
-                                        lineNumber: 254,
+                                        lineNumber: 259,
                                         columnNumber: 29
                                     }, undefined),
                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("h5", {
                                         children: "Frequently Asked Questions"
                                     }, void 0, false, {
                                         fileName: "src/Co2.js",
-                                        lineNumber: 257,
+                                        lineNumber: 262,
                                         columnNumber: 29
                                     }, undefined),
                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _accordionDefault.default), {
@@ -65470,12 +65497,12 @@ const Co2 = ()=>{
                                                             children: "Where does this data come from?"
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 261,
+                                                            lineNumber: 266,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 260,
+                                                        lineNumber: 265,
                                                         columnNumber: 37
                                                     }, undefined),
                                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _accordionDefault.default).Collapse, {
@@ -65484,18 +65511,18 @@ const Co2 = ()=>{
                                                             children: "This is also generated using the Berkeley Earth dataset. You should cite Berkeley Earth and Africa Data Hub when using this data in a story."
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 264,
+                                                            lineNumber: 269,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 263,
+                                                        lineNumber: 268,
                                                         columnNumber: 37
                                                     }, undefined)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "src/Co2.js",
-                                                lineNumber: 259,
+                                                lineNumber: 264,
                                                 columnNumber: 33
                                             }, undefined),
                                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _cardDefault.default), {
@@ -65506,12 +65533,12 @@ const Co2 = ()=>{
                                                             children: "How can I use this data?"
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 269,
+                                                            lineNumber: 274,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 268,
+                                                        lineNumber: 273,
                                                         columnNumber: 37
                                                     }, undefined),
                                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _accordionDefault.default).Collapse, {
@@ -65520,57 +65547,57 @@ const Co2 = ()=>{
                                                             children: "This chart would be useful to include in a story to show a pattern of increasing temperatures over time, since it is comparing like for like. We've included a trend line to show change over time, and a line marking the historical average temperature."
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 272,
+                                                            lineNumber: 277,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 271,
+                                                        lineNumber: 276,
                                                         columnNumber: 37
                                                     }, undefined)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "src/Co2.js",
-                                                lineNumber: 267,
+                                                lineNumber: 272,
                                                 columnNumber: 33
                                             }, undefined)
                                         ]
                                     }, void 0, true, {
                                         fileName: "src/Co2.js",
-                                        lineNumber: 258,
+                                        lineNumber: 263,
                                         columnNumber: 29
                                     }, undefined)
                                 ]
                             }, void 0, true, {
                                 fileName: "src/Co2.js",
-                                lineNumber: 252,
+                                lineNumber: 257,
                                 columnNumber: 25
                             }, undefined),
                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _colDefault.default), {
                                 children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _tempmonthlyBreakdownChartDefault.default), {}, void 0, false, {
                                     fileName: "src/Co2.js",
-                                    lineNumber: 278,
+                                    lineNumber: 283,
                                     columnNumber: 29
                                 }, undefined)
                             }, void 0, false, {
                                 fileName: "src/Co2.js",
-                                lineNumber: 277,
+                                lineNumber: 282,
                                 columnNumber: 25
                             }, undefined)
                         ]
                     }, void 0, true, {
                         fileName: "src/Co2.js",
-                        lineNumber: 251,
+                        lineNumber: 256,
                         columnNumber: 21
                     }, undefined)
                 }, void 0, false, {
                     fileName: "src/Co2.js",
-                    lineNumber: 250,
+                    lineNumber: 255,
                     columnNumber: 17
                 }, undefined)
             }, void 0, false, {
                 fileName: "src/Co2.js",
-                lineNumber: 249,
+                lineNumber: 254,
                 columnNumber: 13
             }, undefined),
             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _containerDefault.default), {
@@ -65589,52 +65616,52 @@ const Co2 = ()=>{
                                             children: "Annual Temperature"
                                         }, void 0, false, {
                                             fileName: "src/Co2.js",
-                                            lineNumber: 288,
+                                            lineNumber: 293,
                                             columnNumber: 33
                                         }, undefined)
                                     }, void 0, false, {
                                         fileName: "src/Co2.js",
-                                        lineNumber: 288,
+                                        lineNumber: 293,
                                         columnNumber: 29
                                     }, undefined),
                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("p", {
                                         children: 'To assist you with your own analysis, we\'ve also prepared the temperature record as a table. Here we are showing the "climate anomaly" in the fourth column. This tells you exactly how much hotter or colder than the historical average a month was.'
                                     }, void 0, false, {
                                         fileName: "src/Co2.js",
-                                        lineNumber: 289,
+                                        lineNumber: 294,
                                         columnNumber: 29
                                     }, undefined)
                                 ]
                             }, void 0, true, {
                                 fileName: "src/Co2.js",
-                                lineNumber: 287,
+                                lineNumber: 292,
                                 columnNumber: 25
                             }, undefined),
                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _colDefault.default), {
                                 children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _tempannualTableDefault.default), {}, void 0, false, {
                                     fileName: "src/Co2.js",
-                                    lineNumber: 294,
+                                    lineNumber: 299,
                                     columnNumber: 29
                                 }, undefined)
                             }, void 0, false, {
                                 fileName: "src/Co2.js",
-                                lineNumber: 293,
+                                lineNumber: 298,
                                 columnNumber: 25
                             }, undefined)
                         ]
                     }, void 0, true, {
                         fileName: "src/Co2.js",
-                        lineNumber: 286,
+                        lineNumber: 291,
                         columnNumber: 21
                     }, undefined)
                 }, void 0, false, {
                     fileName: "src/Co2.js",
-                    lineNumber: 285,
+                    lineNumber: 290,
                     columnNumber: 17
                 }, undefined)
             }, void 0, false, {
                 fileName: "src/Co2.js",
-                lineNumber: 284,
+                lineNumber: 289,
                 columnNumber: 13
             }, undefined),
             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _containerDefault.default), {
@@ -65653,12 +65680,12 @@ const Co2 = ()=>{
                                             children: "Temperature Anomaly"
                                         }, void 0, false, {
                                             fileName: "src/Co2.js",
-                                            lineNumber: 304,
+                                            lineNumber: 309,
                                             columnNumber: 33
                                         }, undefined)
                                     }, void 0, false, {
                                         fileName: "src/Co2.js",
-                                        lineNumber: 304,
+                                        lineNumber: 309,
                                         columnNumber: 29
                                     }, undefined),
                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("p", {
@@ -65670,21 +65697,21 @@ const Co2 = ()=>{
                                                 children: "#ShowYourStripes"
                                             }, void 0, false, {
                                                 fileName: "src/Co2.js",
-                                                lineNumber: 306,
+                                                lineNumber: 311,
                                                 columnNumber: 133
                                             }, undefined),
                                             ". Red bars show years in which the temperature has been higher than the historical average, blue bars years in which it has been colder."
                                         ]
                                     }, void 0, true, {
                                         fileName: "src/Co2.js",
-                                        lineNumber: 305,
+                                        lineNumber: 310,
                                         columnNumber: 29
                                     }, undefined),
                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("h5", {
                                         children: "Frequently Asked Questions"
                                     }, void 0, false, {
                                         fileName: "src/Co2.js",
-                                        lineNumber: 308,
+                                        lineNumber: 313,
                                         columnNumber: 29
                                     }, undefined),
                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _accordionDefault.default), {
@@ -65698,12 +65725,12 @@ const Co2 = ()=>{
                                                             children: "What is a temperature anomaly?"
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 312,
+                                                            lineNumber: 317,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 311,
+                                                        lineNumber: 316,
                                                         columnNumber: 37
                                                     }, undefined),
                                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _accordionDefault.default).Collapse, {
@@ -65712,18 +65739,18 @@ const Co2 = ()=>{
                                                             children: "The anomaly shows the difference between the monthly recorded temperature and the historical average (see above), is used to illustrate the underlying trends of the changing climate. Red bars show years in which the temperature has been higher than the historical average, blue bars years in which it has been colder."
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 315,
+                                                            lineNumber: 320,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 314,
+                                                        lineNumber: 319,
                                                         columnNumber: 37
                                                     }, undefined)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "src/Co2.js",
-                                                lineNumber: 310,
+                                                lineNumber: 315,
                                                 columnNumber: 33
                                             }, undefined),
                                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _cardDefault.default), {
@@ -65734,12 +65761,12 @@ const Co2 = ()=>{
                                                             children: "What trend can I see here?"
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 320,
+                                                            lineNumber: 325,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 319,
+                                                        lineNumber: 324,
                                                         columnNumber: 37
                                                     }, undefined),
                                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _accordionDefault.default).Collapse, {
@@ -65753,25 +65780,25 @@ const Co2 = ()=>{
                                                                     children: "1.5 degrees difference to the pre-industrial era"
                                                                 }, void 0, false, {
                                                                     fileName: "src/Co2.js",
-                                                                    lineNumber: 323,
+                                                                    lineNumber: 328,
                                                                     columnNumber: 136
                                                                 }, undefined),
                                                                 ". You can see from the size and number of red lines just how hard this objective is, and that rather than slowing the rate of change, things are still heating up."
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 323,
+                                                            lineNumber: 328,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 322,
+                                                        lineNumber: 327,
                                                         columnNumber: 37
                                                     }, undefined)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "src/Co2.js",
-                                                lineNumber: 318,
+                                                lineNumber: 323,
                                                 columnNumber: 33
                                             }, undefined),
                                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _cardDefault.default), {
@@ -65782,12 +65809,12 @@ const Co2 = ()=>{
                                                             children: "What can we do about it?"
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 329,
+                                                            lineNumber: 334,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 328,
+                                                        lineNumber: 333,
                                                         columnNumber: 37
                                                     }, undefined),
                                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _accordionDefault.default).Collapse, {
@@ -65801,64 +65828,64 @@ const Co2 = ()=>{
                                                                     children: "climate debt"
                                                                 }, void 0, false, {
                                                                     fileName: "src/Co2.js",
-                                                                    lineNumber: 332,
+                                                                    lineNumber: 337,
                                                                     columnNumber: 305
                                                                 }, undefined),
                                                                 " can only be done through collaboration and co-ordinated action."
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 332,
+                                                            lineNumber: 337,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 331,
+                                                        lineNumber: 336,
                                                         columnNumber: 37
                                                     }, undefined)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "src/Co2.js",
-                                                lineNumber: 327,
+                                                lineNumber: 332,
                                                 columnNumber: 33
                                             }, undefined)
                                         ]
                                     }, void 0, true, {
                                         fileName: "src/Co2.js",
-                                        lineNumber: 309,
+                                        lineNumber: 314,
                                         columnNumber: 29
                                     }, undefined)
                                 ]
                             }, void 0, true, {
                                 fileName: "src/Co2.js",
-                                lineNumber: 303,
+                                lineNumber: 308,
                                 columnNumber: 25
                             }, undefined),
                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _colDefault.default), {
                                 children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _tempanomalyChartDefault.default), {}, void 0, false, {
                                     fileName: "src/Co2.js",
-                                    lineNumber: 339,
+                                    lineNumber: 344,
                                     columnNumber: 29
                                 }, undefined)
                             }, void 0, false, {
                                 fileName: "src/Co2.js",
-                                lineNumber: 338,
+                                lineNumber: 343,
                                 columnNumber: 25
                             }, undefined)
                         ]
                     }, void 0, true, {
                         fileName: "src/Co2.js",
-                        lineNumber: 302,
+                        lineNumber: 307,
                         columnNumber: 21
                     }, undefined)
                 }, void 0, false, {
                     fileName: "src/Co2.js",
-                    lineNumber: 301,
+                    lineNumber: 306,
                     columnNumber: 17
                 }, undefined)
             }, void 0, false, {
                 fileName: "src/Co2.js",
-                lineNumber: 300,
+                lineNumber: 305,
                 columnNumber: 13
             }, undefined),
             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _containerDefault.default), {
@@ -65873,29 +65900,29 @@ const Co2 = ()=>{
                                     size: 1
                                 }, void 0, false, {
                                     fileName: "src/Co2.js",
-                                    lineNumber: 347,
+                                    lineNumber: 352,
                                     columnNumber: 44
                                 }, undefined),
                                 " Rainfall"
                             ]
                         }, void 0, true, {
                             fileName: "src/Co2.js",
-                            lineNumber: 347,
+                            lineNumber: 352,
                             columnNumber: 25
                         }, undefined)
                     }, void 0, false, {
                         fileName: "src/Co2.js",
-                        lineNumber: 347,
+                        lineNumber: 352,
                         columnNumber: 21
                     }, undefined)
                 }, void 0, false, {
                     fileName: "src/Co2.js",
-                    lineNumber: 346,
+                    lineNumber: 351,
                     columnNumber: 17
                 }, undefined)
             }, void 0, false, {
                 fileName: "src/Co2.js",
-                lineNumber: 345,
+                lineNumber: 350,
                 columnNumber: 13
             }, undefined),
             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _containerDefault.default), {
@@ -65914,12 +65941,12 @@ const Co2 = ()=>{
                                             children: "Monthly Actual Rainfall"
                                         }, void 0, false, {
                                             fileName: "src/Co2.js",
-                                            lineNumber: 355,
+                                            lineNumber: 360,
                                             columnNumber: 33
                                         }, undefined)
                                     }, void 0, false, {
                                         fileName: "src/Co2.js",
-                                        lineNumber: 355,
+                                        lineNumber: 360,
                                         columnNumber: 29
                                     }, undefined),
                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("p", {
@@ -65931,7 +65958,7 @@ const Co2 = ()=>{
                                                 children: "Global Precipitation Climatology Centre (GPCC)"
                                             }, void 0, false, {
                                                 fileName: "src/Co2.js",
-                                                lineNumber: 357,
+                                                lineNumber: 362,
                                                 columnNumber: 96
                                             }, undefined),
                                             ". Recent rainfall data comes from ",
@@ -65941,14 +65968,14 @@ const Co2 = ()=>{
                                                 children: "GloH2O"
                                             }, void 0, false, {
                                                 fileName: "src/Co2.js",
-                                                lineNumber: 357,
+                                                lineNumber: 362,
                                                 columnNumber: 227
                                             }, undefined),
                                             ". As with the temperature data above, this data is modelled at the global scale to estimate rainfall at any given moment in time. It is measured in millimetres of rain per month (mm)."
                                         ]
                                     }, void 0, true, {
                                         fileName: "src/Co2.js",
-                                        lineNumber: 356,
+                                        lineNumber: 361,
                                         columnNumber: 29
                                     }, undefined),
                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _accordionDefault.default), {
@@ -65962,12 +65989,12 @@ const Co2 = ()=>{
                                                             children: "How does the heatmap work?"
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 362,
+                                                            lineNumber: 367,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 361,
+                                                        lineNumber: 366,
                                                         columnNumber: 37
                                                     }, undefined),
                                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _accordionDefault.default).Collapse, {
@@ -65976,18 +66003,18 @@ const Co2 = ()=>{
                                                             children: "This graphic shows months on the x-axis and years on the y-axis. Wetter months are a darker blue in colour. It gives you a high level overview of rainfall patterns in a region - which is the rainy months, for example? - and years that may be of interest."
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 365,
+                                                            lineNumber: 370,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 364,
+                                                        lineNumber: 369,
                                                         columnNumber: 37
                                                     }, undefined)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "src/Co2.js",
-                                                lineNumber: 360,
+                                                lineNumber: 365,
                                                 columnNumber: 33
                                             }, undefined),
                                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _cardDefault.default), {
@@ -65998,12 +66025,12 @@ const Co2 = ()=>{
                                                             children: "Can I use this data? "
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 370,
+                                                            lineNumber: 375,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 369,
+                                                        lineNumber: 374,
                                                         columnNumber: 37
                                                     }, undefined),
                                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _accordionDefault.default).Collapse, {
@@ -66012,18 +66039,18 @@ const Co2 = ()=>{
                                                             children: "You certainly can. Our full dataset is downloadable here, and you can share this graphic by clicking the download or share buttons."
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 373,
+                                                            lineNumber: 378,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 372,
+                                                        lineNumber: 377,
                                                         columnNumber: 37
                                                     }, undefined)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "src/Co2.js",
-                                                lineNumber: 368,
+                                                lineNumber: 373,
                                                 columnNumber: 33
                                             }, undefined),
                                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _cardDefault.default), {
@@ -66034,12 +66061,12 @@ const Co2 = ()=>{
                                                             children: "Should I use this graphic in a story?"
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 378,
+                                                            lineNumber: 383,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 377,
+                                                        lineNumber: 382,
                                                         columnNumber: 37
                                                     }, undefined),
                                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _accordionDefault.default).Collapse, {
@@ -66048,18 +66075,18 @@ const Co2 = ()=>{
                                                             children: "Probably not. Again, this is a very high level view of what is happening relating to rainfall. It requires some effort to see details. Readers may be better served with a more simple visualisation, like below."
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 381,
+                                                            lineNumber: 386,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 380,
+                                                        lineNumber: 385,
                                                         columnNumber: 37
                                                     }, undefined)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "src/Co2.js",
-                                                lineNumber: 376,
+                                                lineNumber: 381,
                                                 columnNumber: 33
                                             }, undefined),
                                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _cardDefault.default), {
@@ -66070,12 +66097,12 @@ const Co2 = ()=>{
                                                             children: "How is the historical average calculated?"
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 387,
+                                                            lineNumber: 392,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 386,
+                                                        lineNumber: 391,
                                                         columnNumber: 37
                                                     }, undefined),
                                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _accordionDefault.default).Collapse, {
@@ -66084,57 +66111,57 @@ const Co2 = ()=>{
                                                             children: "Just as with the temperature data, we use the GPCC dataset to calculate the average monthly rainfall for each location based on the period 1950-1980."
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 390,
+                                                            lineNumber: 395,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 389,
+                                                        lineNumber: 394,
                                                         columnNumber: 37
                                                     }, undefined)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "src/Co2.js",
-                                                lineNumber: 385,
+                                                lineNumber: 390,
                                                 columnNumber: 33
                                             }, undefined)
                                         ]
                                     }, void 0, true, {
                                         fileName: "src/Co2.js",
-                                        lineNumber: 359,
+                                        lineNumber: 364,
                                         columnNumber: 29
                                     }, undefined)
                                 ]
                             }, void 0, true, {
                                 fileName: "src/Co2.js",
-                                lineNumber: 354,
+                                lineNumber: 359,
                                 columnNumber: 25
                             }, undefined),
                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _colDefault.default), {
                                 children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _precipmonthlyChartDefault.default), {}, void 0, false, {
                                     fileName: "src/Co2.js",
-                                    lineNumber: 397,
+                                    lineNumber: 402,
                                     columnNumber: 29
                                 }, undefined)
                             }, void 0, false, {
                                 fileName: "src/Co2.js",
-                                lineNumber: 396,
+                                lineNumber: 401,
                                 columnNumber: 25
                             }, undefined)
                         ]
                     }, void 0, true, {
                         fileName: "src/Co2.js",
-                        lineNumber: 353,
+                        lineNumber: 358,
                         columnNumber: 21
                     }, undefined)
                 }, void 0, false, {
                     fileName: "src/Co2.js",
-                    lineNumber: 352,
+                    lineNumber: 357,
                     columnNumber: 17
                 }, undefined)
             }, void 0, false, {
                 fileName: "src/Co2.js",
-                lineNumber: 351,
+                lineNumber: 356,
                 columnNumber: 13
             }, undefined),
             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _containerDefault.default), {
@@ -66153,19 +66180,19 @@ const Co2 = ()=>{
                                             children: "Monthly Rainfall Breakdown"
                                         }, void 0, false, {
                                             fileName: "src/Co2.js",
-                                            lineNumber: 407,
+                                            lineNumber: 412,
                                             columnNumber: 33
                                         }, undefined)
                                     }, void 0, false, {
                                         fileName: "src/Co2.js",
-                                        lineNumber: 407,
+                                        lineNumber: 412,
                                         columnNumber: 29
                                     }, undefined),
                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("p", {
                                         children: "This chart also shows the GPCC data for your location, but in this case we have illustrated it as a line chart showing a single month over time."
                                     }, void 0, false, {
                                         fileName: "src/Co2.js",
-                                        lineNumber: 408,
+                                        lineNumber: 413,
                                         columnNumber: 29
                                     }, undefined),
                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _accordionDefault.default), {
@@ -66179,12 +66206,12 @@ const Co2 = ()=>{
                                                             children: "Why is this a better chart for storytelling?"
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 414,
+                                                            lineNumber: 419,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 413,
+                                                        lineNumber: 418,
                                                         columnNumber: 37
                                                     }, undefined),
                                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _accordionDefault.default).Collapse, {
@@ -66193,18 +66220,18 @@ const Co2 = ()=>{
                                                             children: "It's likely that most of your reporting will be around specific incidents or time periods. Using a line chart helps readers to focus on details, such as whether this June was unusually wet, or if an unexpected storm really was an anomaly."
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 417,
+                                                            lineNumber: 422,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 416,
+                                                        lineNumber: 421,
                                                         columnNumber: 37
                                                     }, undefined)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "src/Co2.js",
-                                                lineNumber: 412,
+                                                lineNumber: 417,
                                                 columnNumber: 33
                                             }, undefined),
                                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _cardDefault.default), {
@@ -66215,12 +66242,12 @@ const Co2 = ()=>{
                                                             children: "Can I change the timeframe?"
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 422,
+                                                            lineNumber: 427,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 421,
+                                                        lineNumber: 426,
                                                         columnNumber: 37
                                                     }, undefined),
                                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _accordionDefault.default).Collapse, {
@@ -66229,18 +66256,18 @@ const Co2 = ()=>{
                                                             children: "You can, and you should before including this in your work. Sometimes you may want to show all the data - to demonstrate changing seasonal patterns. But to illustrate that this month was unusually wet you'll probably want a more focussed image with the historical average (which we've also included)."
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 425,
+                                                            lineNumber: 430,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 424,
+                                                        lineNumber: 429,
                                                         columnNumber: 37
                                                     }, undefined)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "src/Co2.js",
-                                                lineNumber: 420,
+                                                lineNumber: 425,
                                                 columnNumber: 33
                                             }, undefined),
                                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _cardDefault.default), {
@@ -66251,12 +66278,12 @@ const Co2 = ()=>{
                                                             children: "Where is the wettest place in Africa? "
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 431,
+                                                            lineNumber: 436,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 430,
+                                                        lineNumber: 435,
                                                         columnNumber: 37
                                                     }, undefined),
                                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _accordionDefault.default).Collapse, {
@@ -66270,25 +66297,25 @@ const Co2 = ()=>{
                                                                     children: "staggering 10 450mm of rain a year"
                                                                 }, void 0, false, {
                                                                     fileName: "src/Co2.js",
-                                                                    lineNumber: 434,
+                                                                    lineNumber: 439,
                                                                     columnNumber: 147
                                                                 }, undefined),
                                                                 ". That's almost 20 times more rain than London!"
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 434,
+                                                            lineNumber: 439,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 433,
+                                                        lineNumber: 438,
                                                         columnNumber: 37
                                                     }, undefined)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "src/Co2.js",
-                                                lineNumber: 429,
+                                                lineNumber: 434,
                                                 columnNumber: 33
                                             }, undefined),
                                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _cardDefault.default), {
@@ -66299,12 +66326,12 @@ const Co2 = ()=>{
                                                             children: "How is the historical average calculated? "
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 440,
+                                                            lineNumber: 445,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 439,
+                                                        lineNumber: 444,
                                                         columnNumber: 37
                                                     }, undefined),
                                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _accordionDefault.default).Collapse, {
@@ -66313,57 +66340,57 @@ const Co2 = ()=>{
                                                             children: "Just as with the temperature data, we use the GPCC dataset to calculate the average monthly rainfall for each location based on the period 1950-1980."
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 443,
+                                                            lineNumber: 448,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 442,
+                                                        lineNumber: 447,
                                                         columnNumber: 37
                                                     }, undefined)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "src/Co2.js",
-                                                lineNumber: 438,
+                                                lineNumber: 443,
                                                 columnNumber: 33
                                             }, undefined)
                                         ]
                                     }, void 0, true, {
                                         fileName: "src/Co2.js",
-                                        lineNumber: 411,
+                                        lineNumber: 416,
                                         columnNumber: 29
                                     }, undefined)
                                 ]
                             }, void 0, true, {
                                 fileName: "src/Co2.js",
-                                lineNumber: 406,
+                                lineNumber: 411,
                                 columnNumber: 25
                             }, undefined),
                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _colDefault.default), {
                                 children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _precipmonthlyBreakdownChartDefault.default), {}, void 0, false, {
                                     fileName: "src/Co2.js",
-                                    lineNumber: 450,
+                                    lineNumber: 455,
                                     columnNumber: 29
                                 }, undefined)
                             }, void 0, false, {
                                 fileName: "src/Co2.js",
-                                lineNumber: 449,
+                                lineNumber: 454,
                                 columnNumber: 25
                             }, undefined)
                         ]
                     }, void 0, true, {
                         fileName: "src/Co2.js",
-                        lineNumber: 405,
+                        lineNumber: 410,
                         columnNumber: 21
                     }, undefined)
                 }, void 0, false, {
                     fileName: "src/Co2.js",
-                    lineNumber: 404,
+                    lineNumber: 409,
                     columnNumber: 17
                 }, undefined)
             }, void 0, false, {
                 fileName: "src/Co2.js",
-                lineNumber: 403,
+                lineNumber: 408,
                 columnNumber: 13
             }, undefined),
             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _containerDefault.default), {
@@ -66382,19 +66409,19 @@ const Co2 = ()=>{
                                             children: "Annual Rainfall"
                                         }, void 0, false, {
                                             fileName: "src/Co2.js",
-                                            lineNumber: 460,
+                                            lineNumber: 465,
                                             columnNumber: 33
                                         }, undefined)
                                     }, void 0, false, {
                                         fileName: "src/Co2.js",
-                                        lineNumber: 460,
+                                        lineNumber: 465,
                                         columnNumber: 29
                                     }, undefined),
                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("p", {
                                         children: "We've also included the rainfall data as an interactive table for you, which shows the difference between a particular month and the historical average."
                                     }, void 0, false, {
                                         fileName: "src/Co2.js",
-                                        lineNumber: 461,
+                                        lineNumber: 466,
                                         columnNumber: 29
                                     }, undefined),
                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _accordionDefault.default), {
@@ -66407,12 +66434,12 @@ const Co2 = ()=>{
                                                         children: "What's the driest place in sub-Saharan Africa?"
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 467,
+                                                        lineNumber: 472,
                                                         columnNumber: 41
                                                     }, undefined)
                                                 }, void 0, false, {
                                                     fileName: "src/Co2.js",
-                                                    lineNumber: 466,
+                                                    lineNumber: 471,
                                                     columnNumber: 37
                                                 }, undefined),
                                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _accordionDefault.default).Collapse, {
@@ -66421,56 +66448,56 @@ const Co2 = ()=>{
                                                         children: "The Namib desert in Namibia is the driest place in sub-Saharan Africa, and it's reckoned that some parts of the Namib receive less than 2mm of rain a year."
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 470,
+                                                        lineNumber: 475,
                                                         columnNumber: 41
                                                     }, undefined)
                                                 }, void 0, false, {
                                                     fileName: "src/Co2.js",
-                                                    lineNumber: 469,
+                                                    lineNumber: 474,
                                                     columnNumber: 37
                                                 }, undefined)
                                             ]
                                         }, void 0, true, {
                                             fileName: "src/Co2.js",
-                                            lineNumber: 465,
+                                            lineNumber: 470,
                                             columnNumber: 33
                                         }, undefined)
                                     }, void 0, false, {
                                         fileName: "src/Co2.js",
-                                        lineNumber: 464,
+                                        lineNumber: 469,
                                         columnNumber: 29
                                     }, undefined)
                                 ]
                             }, void 0, true, {
                                 fileName: "src/Co2.js",
-                                lineNumber: 459,
+                                lineNumber: 464,
                                 columnNumber: 25
                             }, undefined),
                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _colDefault.default), {
                                 children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _precipannualTableDefault.default), {}, void 0, false, {
                                     fileName: "src/Co2.js",
-                                    lineNumber: 477,
+                                    lineNumber: 482,
                                     columnNumber: 29
                                 }, undefined)
                             }, void 0, false, {
                                 fileName: "src/Co2.js",
-                                lineNumber: 476,
+                                lineNumber: 481,
                                 columnNumber: 25
                             }, undefined)
                         ]
                     }, void 0, true, {
                         fileName: "src/Co2.js",
-                        lineNumber: 458,
+                        lineNumber: 463,
                         columnNumber: 21
                     }, undefined)
                 }, void 0, false, {
                     fileName: "src/Co2.js",
-                    lineNumber: 457,
+                    lineNumber: 462,
                     columnNumber: 17
                 }, undefined)
             }, void 0, false, {
                 fileName: "src/Co2.js",
-                lineNumber: 456,
+                lineNumber: 461,
                 columnNumber: 13
             }, undefined),
             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _containerDefault.default), {
@@ -66485,29 +66512,29 @@ const Co2 = ()=>{
                                     size: 1
                                 }, void 0, false, {
                                     fileName: "src/Co2.js",
-                                    lineNumber: 485,
+                                    lineNumber: 490,
                                     columnNumber: 46
                                 }, undefined),
                                 " Air Quality"
                             ]
                         }, void 0, true, {
                             fileName: "src/Co2.js",
-                            lineNumber: 485,
+                            lineNumber: 490,
                             columnNumber: 25
                         }, undefined)
                     }, void 0, false, {
                         fileName: "src/Co2.js",
-                        lineNumber: 485,
+                        lineNumber: 490,
                         columnNumber: 21
                     }, undefined)
                 }, void 0, false, {
                     fileName: "src/Co2.js",
-                    lineNumber: 484,
+                    lineNumber: 489,
                     columnNumber: 17
                 }, undefined)
             }, void 0, false, {
                 fileName: "src/Co2.js",
-                lineNumber: 483,
+                lineNumber: 488,
                 columnNumber: 13
             }, undefined),
             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _containerDefault.default), {
@@ -66526,33 +66553,33 @@ const Co2 = ()=>{
                                             children: "Air Quality"
                                         }, void 0, false, {
                                             fileName: "src/Co2.js",
-                                            lineNumber: 493,
+                                            lineNumber: 498,
                                             columnNumber: 33
                                         }, undefined)
                                     }, void 0, false, {
                                         fileName: "src/Co2.js",
-                                        lineNumber: 493,
+                                        lineNumber: 498,
                                         columnNumber: 29
                                     }, undefined),
                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("p", {
                                         children: "Air quality covers a broad range of metrics ranging from the number of observed pollutants in the air to pollen and humidity. It is best measured using calibrated base stations at ground level, but challenges around the presence and availability of these are high. Despite local government mandates, many areas simply don't have measuring stations or fail to maintain them properly."
                                     }, void 0, false, {
                                         fileName: "src/Co2.js",
-                                        lineNumber: 494,
+                                        lineNumber: 499,
                                         columnNumber: 29
                                     }, undefined),
                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("p", {
                                         children: "Aerosol Optical Depth (AOD) data, as measured by satellite cameras, can be used as an alternative to ground monitoring, specifically to infer particulate matter concentrations (like PM2.5). AOD represents the degree to which particles in the atmosphere (dust, smoke, pollutants) prevent sunlight from passing through the atmosphere. Higher AOD values generally indicate higher levels of aerosols, which can correspond to poorer air quality."
                                     }, void 0, false, {
                                         fileName: "src/Co2.js",
-                                        lineNumber: 497,
+                                        lineNumber: 502,
                                         columnNumber: 29
                                     }, undefined),
                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("p", {
                                         children: "Higher values indicating worse air quality. This chart shows maximum, minimum and average AOD for the time period."
                                     }, void 0, false, {
                                         fileName: "src/Co2.js",
-                                        lineNumber: 500,
+                                        lineNumber: 505,
                                         columnNumber: 29
                                     }, undefined),
                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
@@ -66562,7 +66589,7 @@ const Co2 = ()=>{
                                                 children: "Legend"
                                             }, void 0, false, {
                                                 fileName: "src/Co2.js",
-                                                lineNumber: 504,
+                                                lineNumber: 509,
                                                 columnNumber: 33
                                             }, undefined),
                                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
@@ -66575,7 +66602,7 @@ const Co2 = ()=>{
                                                                 children: "0 and 100"
                                                             }, void 0, false, {
                                                                 fileName: "src/Co2.js",
-                                                                lineNumber: 506,
+                                                                lineNumber: 511,
                                                                 columnNumber: 61
                                                             }, undefined),
                                                             " would be an indication of clean air, minimal aerosols, equivalent to PM2.5 levels under ",
@@ -66583,14 +66610,14 @@ const Co2 = ()=>{
                                                                 children: "12 \xb5g/m\xb3"
                                                             }, void 0, false, {
                                                                 fileName: "src/Co2.js",
-                                                                lineNumber: 506,
+                                                                lineNumber: 511,
                                                                 columnNumber: 176
                                                             }, undefined),
                                                             " (good air quality)."
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 506,
+                                                        lineNumber: 511,
                                                         columnNumber: 37
                                                     }, undefined),
                                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("p", {
@@ -66600,7 +66627,7 @@ const Co2 = ()=>{
                                                                 children: "601 and 1000"
                                                             }, void 0, false, {
                                                                 fileName: "src/Co2.js",
-                                                                lineNumber: 507,
+                                                                lineNumber: 512,
                                                                 columnNumber: 61
                                                             }, undefined),
                                                             " would indicate significant air pollution, equating to PM2.5 levels between ",
@@ -66608,14 +66635,14 @@ const Co2 = ()=>{
                                                                 children: "55\u2013150 \xb5g/m\xb3"
                                                             }, void 0, false, {
                                                                 fileName: "src/Co2.js",
-                                                                lineNumber: 507,
+                                                                lineNumber: 512,
                                                                 columnNumber: 166
                                                             }, undefined),
                                                             ", affecting most of the population."
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 507,
+                                                        lineNumber: 512,
                                                         columnNumber: 37
                                                     }, undefined),
                                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("p", {
@@ -66625,7 +66652,7 @@ const Co2 = ()=>{
                                                                 children: "2000"
                                                             }, void 0, false, {
                                                                 fileName: "src/Co2.js",
-                                                                lineNumber: 508,
+                                                                lineNumber: 513,
                                                                 columnNumber: 65
                                                             }, undefined),
                                                             " would indicate extremely high levels of pollution, likely corresponding to events like wildfires or dust storms. PM2.5 values in this range could exceed ",
@@ -66633,26 +66660,26 @@ const Co2 = ()=>{
                                                                 children: "250 \xb5g/m\xb3"
                                                             }, void 0, false, {
                                                                 fileName: "src/Co2.js",
-                                                                lineNumber: 508,
+                                                                lineNumber: 513,
                                                                 columnNumber: 240
                                                             }, undefined),
                                                             ", severely impacting health and visibility."
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 508,
+                                                        lineNumber: 513,
                                                         columnNumber: 37
                                                     }, undefined)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "src/Co2.js",
-                                                lineNumber: 505,
+                                                lineNumber: 510,
                                                 columnNumber: 33
                                             }, undefined)
                                         ]
                                     }, void 0, true, {
                                         fileName: "src/Co2.js",
-                                        lineNumber: 503,
+                                        lineNumber: 508,
                                         columnNumber: 29
                                     }, undefined),
                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _accordionDefault.default), {
@@ -66666,12 +66693,12 @@ const Co2 = ()=>{
                                                             children: "Where does the data come from?"
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 514,
+                                                            lineNumber: 519,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 513,
+                                                        lineNumber: 518,
                                                         columnNumber: 37
                                                     }, undefined),
                                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _accordionDefault.default).Collapse, {
@@ -66685,25 +66712,25 @@ const Co2 = ()=>{
                                                                     children: "level-3 atmosphere monthly global product (MYD08_M3) dataset"
                                                                 }, void 0, false, {
                                                                     fileName: "src/Co2.js",
-                                                                    lineNumber: 517,
+                                                                    lineNumber: 522,
                                                                     columnNumber: 110
                                                                 }, undefined),
                                                                 ", captured by Moderate Resolution Imaging Spectroradiometer (MODIS) satellites (Aqua and Terra). These satellites take two snapshots a day."
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 517,
+                                                            lineNumber: 522,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 516,
+                                                        lineNumber: 521,
                                                         columnNumber: 37
                                                     }, undefined)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "src/Co2.js",
-                                                lineNumber: 512,
+                                                lineNumber: 517,
                                                 columnNumber: 33
                                             }, undefined),
                                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _cardDefault.default), {
@@ -66714,12 +66741,12 @@ const Co2 = ()=>{
                                                             children: "What is PM2.5?"
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 522,
+                                                            lineNumber: 527,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 521,
+                                                        lineNumber: 526,
                                                         columnNumber: 37
                                                     }, undefined),
                                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _accordionDefault.default).Collapse, {
@@ -66728,18 +66755,18 @@ const Co2 = ()=>{
                                                             children: "PM2.5 refers to fine, inhalable airborne particles and liquid droplets measuring 2.5 micrometers or smaller (about 30 times thinner than a human hair). It comes from combustion sources like wildfires, vehicle exhaust, industrial burning and cooking, or is formed through atmospheric chemical reactions."
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 525,
+                                                            lineNumber: 530,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 524,
+                                                        lineNumber: 529,
                                                         columnNumber: 37
                                                     }, undefined)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "src/Co2.js",
-                                                lineNumber: 520,
+                                                lineNumber: 525,
                                                 columnNumber: 33
                                             }, undefined),
                                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _cardDefault.default), {
@@ -66750,12 +66777,12 @@ const Co2 = ()=>{
                                                             children: "Is AOD a reliable metric?"
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 530,
+                                                            lineNumber: 535,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 529,
+                                                        lineNumber: 534,
                                                         columnNumber: 37
                                                     }, undefined),
                                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _accordionDefault.default).Collapse, {
@@ -66766,31 +66793,31 @@ const Co2 = ()=>{
                                                                     children: "AOD measures air thickness which can indicate the presence of pollutants, but it does not measure them directly. Modelling and analysis keeps accuracy high, but it can drop to less than 70% accuracy in some instances. AOD by itself does not take into account cloud cover, weather conditions and other factors that might affect the air thickness, for example coastal areas may show higher than expected PM2.5 due to salt spray or harmless expansion of small molecules which absorb water. In addition, the physical grid size may cover areas of high pollution and low pollution, which are averaged together (such as an industrial port and open ocean)."
                                                                 }, void 0, false, {
                                                                     fileName: "src/Co2.js",
-                                                                    lineNumber: 533,
+                                                                    lineNumber: 538,
                                                                     columnNumber: 52
                                                                 }, undefined),
                                                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("p", {
                                                                     children: "In addition, MODIS satellites cannot capture data through clouds."
                                                                 }, void 0, false, {
                                                                     fileName: "src/Co2.js",
-                                                                    lineNumber: 534,
+                                                                    lineNumber: 539,
                                                                     columnNumber: 41
                                                                 }, undefined)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 533,
+                                                            lineNumber: 538,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 532,
+                                                        lineNumber: 537,
                                                         columnNumber: 37
                                                     }, undefined)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "src/Co2.js",
-                                                lineNumber: 528,
+                                                lineNumber: 533,
                                                 columnNumber: 33
                                             }, undefined),
                                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _cardDefault.default), {
@@ -66801,12 +66828,12 @@ const Co2 = ()=>{
                                                             children: "How can I use this data?"
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 539,
+                                                            lineNumber: 544,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 538,
+                                                        lineNumber: 543,
                                                         columnNumber: 37
                                                     }, undefined),
                                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _accordionDefault.default).Collapse, {
@@ -66815,30 +66842,30 @@ const Co2 = ()=>{
                                                             children: "AOD can help point to trends over time, and help journalists and researchers to build evidence pointing to the impact of factors like climate change, urbanisation, mines or wildfires on health, the environment and more. It can be used to help direct investigations, but shouldn't be relied on as sole proof of AQ-related issues."
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 542,
+                                                            lineNumber: 547,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 541,
+                                                        lineNumber: 546,
                                                         columnNumber: 37
                                                     }, undefined)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "src/Co2.js",
-                                                lineNumber: 537,
+                                                lineNumber: 542,
                                                 columnNumber: 33
                                             }, undefined)
                                         ]
                                     }, void 0, true, {
                                         fileName: "src/Co2.js",
-                                        lineNumber: 511,
+                                        lineNumber: 516,
                                         columnNumber: 29
                                     }, undefined)
                                 ]
                             }, void 0, true, {
                                 fileName: "src/Co2.js",
-                                lineNumber: 492,
+                                lineNumber: 497,
                                 columnNumber: 25
                             }, undefined),
                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _colDefault.default), {
@@ -66847,39 +66874,39 @@ const Co2 = ()=>{
                                     children: [
                                         /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _aqchartDefault.default), {}, void 0, false, {
                                             fileName: "src/Co2.js",
-                                            lineNumber: 549,
+                                            lineNumber: 554,
                                             columnNumber: 33
                                         }, undefined),
                                         /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _aqmonthlyChartDefault.default), {}, void 0, false, {
                                             fileName: "src/Co2.js",
-                                            lineNumber: 550,
+                                            lineNumber: 555,
                                             columnNumber: 33
                                         }, undefined)
                                     ]
                                 }, void 0, true, {
                                     fileName: "src/Co2.js",
-                                    lineNumber: 548,
+                                    lineNumber: 553,
                                     columnNumber: 29
                                 }, undefined)
                             }, void 0, false, {
                                 fileName: "src/Co2.js",
-                                lineNumber: 547,
+                                lineNumber: 552,
                                 columnNumber: 25
                             }, undefined)
                         ]
                     }, void 0, true, {
                         fileName: "src/Co2.js",
-                        lineNumber: 491,
+                        lineNumber: 496,
                         columnNumber: 21
                     }, undefined)
                 }, void 0, false, {
                     fileName: "src/Co2.js",
-                    lineNumber: 490,
+                    lineNumber: 495,
                     columnNumber: 17
                 }, undefined)
             }, void 0, false, {
                 fileName: "src/Co2.js",
-                lineNumber: 489,
+                lineNumber: 494,
                 columnNumber: 13
             }, undefined),
             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _containerDefault.default), {
@@ -66894,29 +66921,29 @@ const Co2 = ()=>{
                                     size: 1
                                 }, void 0, false, {
                                     fileName: "src/Co2.js",
-                                    lineNumber: 563,
+                                    lineNumber: 568,
                                     columnNumber: 41
                                 }, undefined),
                                 " Crops"
                             ]
                         }, void 0, true, {
                             fileName: "src/Co2.js",
-                            lineNumber: 563,
+                            lineNumber: 568,
                             columnNumber: 25
                         }, undefined)
                     }, void 0, false, {
                         fileName: "src/Co2.js",
-                        lineNumber: 563,
+                        lineNumber: 568,
                         columnNumber: 21
                     }, undefined)
                 }, void 0, false, {
                     fileName: "src/Co2.js",
-                    lineNumber: 562,
+                    lineNumber: 567,
                     columnNumber: 17
                 }, undefined)
             }, void 0, false, {
                 fileName: "src/Co2.js",
-                lineNumber: 561,
+                lineNumber: 566,
                 columnNumber: 13
             }, undefined),
             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _containerDefault.default), {
@@ -66935,19 +66962,36 @@ const Co2 = ()=>{
                                             children: "Water Requirement Satisfaction Index"
                                         }, void 0, false, {
                                             fileName: "src/Co2.js",
-                                            lineNumber: 571,
+                                            lineNumber: 576,
                                             columnNumber: 33
                                         }, undefined)
                                     }, void 0, false, {
                                         fileName: "src/Co2.js",
-                                        lineNumber: 571,
+                                        lineNumber: 576,
                                         columnNumber: 29
                                     }, undefined),
                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("p", {
-                                        children: "Water stress is a key factor in crop health. The Water Requirement Satisfaction Index (WRSI) is a widely used metric to assess this. WSRI is calculated as a score out of 100, where 100 means the crop has all the water it needs to thrive. It must be calculated separately for different crops."
+                                        children: "Water stress is a key factor in crop health. The Water Requirement Satisfaction Index (WRSI) is a widely used metric to assess this. WRSI is calculated as a score out of 100, where 100 means the crop has all the water it needs to thrive, and it is calculated separately for each crop."
                                     }, void 0, false, {
                                         fileName: "src/Co2.js",
-                                        lineNumber: 572,
+                                        lineNumber: 577,
+                                        columnNumber: 29
+                                    }, undefined),
+                                    /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("p", {
+                                        children: [
+                                            "You are currently viewing ",
+                                            /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("strong", {
+                                                children: selectedCrop.name
+                                            }, void 0, false, {
+                                                fileName: "src/Co2.js",
+                                                lineNumber: 581,
+                                                columnNumber: 59
+                                            }, undefined),
+                                            ". Use the crop selector above either chart to switch crop."
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "src/Co2.js",
+                                        lineNumber: 580,
                                         columnNumber: 29
                                     }, undefined),
                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("p", {
@@ -66955,12 +66999,12 @@ const Co2 = ()=>{
                                             children: "The data is modeled and not directly observed, so it should be used as a guide to understanding patterns of water stress rather than an exact measurement of conditions on the ground."
                                         }, void 0, false, {
                                             fileName: "src/Co2.js",
-                                            lineNumber: 575,
+                                            lineNumber: 583,
                                             columnNumber: 32
                                         }, undefined)
                                     }, void 0, false, {
                                         fileName: "src/Co2.js",
-                                        lineNumber: 575,
+                                        lineNumber: 583,
                                         columnNumber: 29
                                     }, undefined),
                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _accordionDefault.default), {
@@ -66974,12 +67018,12 @@ const Co2 = ()=>{
                                                             children: "What does the main chart show?"
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 581,
+                                                            lineNumber: 589,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 580,
+                                                        lineNumber: 588,
                                                         columnNumber: 37
                                                     }, undefined),
                                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _accordionDefault.default).Collapse, {
@@ -66987,17 +67031,37 @@ const Co2 = ()=>{
                                                         children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _cardDefault.default).Body, {
                                                             children: [
                                                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("p", {
-                                                                    children: "The main chart here shows the WSRI for a reference grass, based on the location and date range selected. You can use it to understand changing patterns in water availability over time, and potentially to infer future trends based on historical data."
-                                                                }, void 0, false, {
+                                                                    children: [
+                                                                        "The charts here show the WRSI for ",
+                                                                        /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("strong", {
+                                                                            children: selectedCrop.name
+                                                                        }, void 0, false, {
+                                                                            fileName: "src/Co2.js",
+                                                                            lineNumber: 593,
+                                                                            columnNumber: 82
+                                                                        }, undefined),
+                                                                        " (Kc",
+                                                                        /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("sub", {
+                                                                            children: "mid"
+                                                                        }, void 0, false, {
+                                                                            fileName: "src/Co2.js",
+                                                                            lineNumber: 593,
+                                                                            columnNumber: 122
+                                                                        }, undefined),
+                                                                        " ",
+                                                                        selectedCrop.kc_mid.toFixed(2),
+                                                                        "), based on the location and date range selected. You can use them to understand changing patterns in water availability over time, and potentially to infer future trends based on historical data."
+                                                                    ]
+                                                                }, void 0, true, {
                                                                     fileName: "src/Co2.js",
-                                                                    lineNumber: 585,
+                                                                    lineNumber: 593,
                                                                     columnNumber: 45
                                                                 }, undefined),
                                                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("p", {
-                                                                    children: "The key formula used to calculate WSRI is"
+                                                                    children: "The key formula used to calculate WRSI is"
                                                                 }, void 0, false, {
                                                                     fileName: "src/Co2.js",
-                                                                    lineNumber: 586,
+                                                                    lineNumber: 594,
                                                                     columnNumber: 45
                                                                 }, undefined),
                                                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("p", {
@@ -67005,29 +67069,29 @@ const Co2 = ()=>{
                                                                         children: "WRSI = (Water Available / Water Required) * 100."
                                                                     }, void 0, false, {
                                                                         fileName: "src/Co2.js",
-                                                                        lineNumber: 587,
+                                                                        lineNumber: 595,
                                                                         columnNumber: 48
                                                                     }, undefined)
                                                                 }, void 0, false, {
                                                                     fileName: "src/Co2.js",
-                                                                    lineNumber: 587,
+                                                                    lineNumber: 595,
                                                                     columnNumber: 45
                                                                 }, undefined)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 584,
+                                                            lineNumber: 592,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 583,
+                                                        lineNumber: 591,
                                                         columnNumber: 37
                                                     }, undefined)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "src/Co2.js",
-                                                lineNumber: 579,
+                                                lineNumber: 587,
                                                 columnNumber: 33
                                             }, undefined),
                                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _cardDefault.default), {
@@ -67038,12 +67102,12 @@ const Co2 = ()=>{
                                                             children: "Where does the data come from?"
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 593,
+                                                            lineNumber: 601,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 592,
+                                                        lineNumber: 600,
                                                         columnNumber: 37
                                                     }, undefined),
                                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _accordionDefault.default).Collapse, {
@@ -67059,30 +67123,30 @@ const Co2 = ()=>{
                                                                         children: "FLDAS dataset"
                                                                     }, void 0, false, {
                                                                         fileName: "src/Co2.js",
-                                                                        lineNumber: 597,
+                                                                        lineNumber: 605,
                                                                         columnNumber: 93
                                                                     }, undefined),
                                                                     ", which combines rainfall data with soil moisture and crop water requirements to provide a comprehensive picture of water stress for crops across Africa."
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "src/Co2.js",
-                                                                lineNumber: 597,
+                                                                lineNumber: 605,
                                                                 columnNumber: 45
                                                             }, undefined)
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 596,
+                                                            lineNumber: 604,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 595,
+                                                        lineNumber: 603,
                                                         columnNumber: 37
                                                     }, undefined)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "src/Co2.js",
-                                                lineNumber: 591,
+                                                lineNumber: 599,
                                                 columnNumber: 33
                                             }, undefined),
                                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _cardDefault.default), {
@@ -67093,12 +67157,12 @@ const Co2 = ()=>{
                                                             children: "How can I use this data?"
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 603,
+                                                            lineNumber: 611,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 602,
+                                                        lineNumber: 610,
                                                         columnNumber: 37
                                                     }, undefined),
                                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _accordionDefault.default).Collapse, {
@@ -67108,23 +67172,23 @@ const Co2 = ()=>{
                                                                 children: "You can use this data to analyse changes in the available water for a region over time. It\u2019s best to select months based on the growing season for the crop in question. It can help non-experts to understand if issues with crop yield are water related."
                                                             }, void 0, false, {
                                                                 fileName: "src/Co2.js",
-                                                                lineNumber: 607,
+                                                                lineNumber: 615,
                                                                 columnNumber: 45
                                                             }, undefined)
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 606,
+                                                            lineNumber: 614,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 605,
+                                                        lineNumber: 613,
                                                         columnNumber: 37
                                                     }, undefined)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "src/Co2.js",
-                                                lineNumber: 601,
+                                                lineNumber: 609,
                                                 columnNumber: 33
                                             }, undefined),
                                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _cardDefault.default), {
@@ -67135,83 +67199,152 @@ const Co2 = ()=>{
                                                             children: "How are crop specific values calculated?"
                                                         }, void 0, false, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 613,
+                                                            lineNumber: 621,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 612,
+                                                        lineNumber: 620,
                                                         columnNumber: 37
                                                     }, undefined),
                                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _accordionDefault.default).Collapse, {
                                                         eventKey: "3",
                                                         children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _cardDefault.default).Body, {
-                                                            children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("p", {
-                                                                children: "Crop specific values are shown as an example of what kinds of crops would be under stress in the chosen area. The table does not show crops that are specific to the region selected. Crop WSRI values can be calculated individually, or by applying a multiplier to the standardised WSRI figure shown in the first table. For example, tomatoes require 15% more water than the based crop, millet, so the base WSRI is multiple by 1.15 to find the WSRI for tomatoes."
-                                                            }, void 0, false, {
-                                                                fileName: "src/Co2.js",
-                                                                lineNumber: 617,
-                                                                columnNumber: 45
-                                                            }, undefined)
-                                                        }, void 0, false, {
+                                                            children: [
+                                                                /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("p", {
+                                                                    children: [
+                                                                        "Every crop needs a different amount of water, and each one has a crop coefficient (Kc",
+                                                                        /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("sub", {
+                                                                            children: "mid"
+                                                                        }, void 0, false, {
+                                                                            fileName: "src/Co2.js",
+                                                                            lineNumber: 625,
+                                                                            columnNumber: 133
+                                                                        }, undefined),
+                                                                        ") from ",
+                                                                        /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("a", {
+                                                                            href: "https://www.fao.org/4/x0490e/x0490e00.htm",
+                                                                            target: "_blank",
+                                                                            rel: "noreferrer",
+                                                                            children: "FAO-56"
+                                                                        }, void 0, false, {
+                                                                            fileName: "src/Co2.js",
+                                                                            lineNumber: 625,
+                                                                            columnNumber: 154
+                                                                        }, undefined),
+                                                                        " that compares its demand to the standardised figure the index is based on. The charts divide that standardised figure by the selected crop's Kc",
+                                                                        /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("sub", {
+                                                                            children: "mid"
+                                                                        }, void 0, false, {
+                                                                            fileName: "src/Co2.js",
+                                                                            lineNumber: 625,
+                                                                            columnNumber: 393
+                                                                        }, undefined),
+                                                                        ", so a crop that needs more water scores lower in the same conditions."
+                                                                    ]
+                                                                }, void 0, true, {
+                                                                    fileName: "src/Co2.js",
+                                                                    lineNumber: 625,
+                                                                    columnNumber: 45
+                                                                }, undefined),
+                                                                /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("p", {
+                                                                    children: [
+                                                                        "The crops listed are examples of common crops rather than the crops grown in the region selected. You are currently viewing ",
+                                                                        /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("strong", {
+                                                                            children: selectedCrop.name
+                                                                        }, void 0, false, {
+                                                                            fileName: "src/Co2.js",
+                                                                            lineNumber: 626,
+                                                                            columnNumber: 172
+                                                                        }, undefined),
+                                                                        ", which has a Kc",
+                                                                        /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("sub", {
+                                                                            children: "mid"
+                                                                        }, void 0, false, {
+                                                                            fileName: "src/Co2.js",
+                                                                            lineNumber: 626,
+                                                                            columnNumber: 224
+                                                                        }, undefined),
+                                                                        " of ",
+                                                                        selectedCrop.kc_mid.toFixed(2),
+                                                                        ": a standardised index of 70 works out at ",
+                                                                        /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("strong", {
+                                                                            children: (70 / selectedCrop.kc_mid).toFixed(1)
+                                                                        }, void 0, false, {
+                                                                            fileName: "src/Co2.js",
+                                                                            lineNumber: 626,
+                                                                            columnNumber: 316
+                                                                        }, undefined),
+                                                                        " for this crop."
+                                                                    ]
+                                                                }, void 0, true, {
+                                                                    fileName: "src/Co2.js",
+                                                                    lineNumber: 626,
+                                                                    columnNumber: 45
+                                                                }, undefined)
+                                                            ]
+                                                        }, void 0, true, {
                                                             fileName: "src/Co2.js",
-                                                            lineNumber: 616,
+                                                            lineNumber: 624,
                                                             columnNumber: 41
                                                         }, undefined)
                                                     }, void 0, false, {
                                                         fileName: "src/Co2.js",
-                                                        lineNumber: 615,
+                                                        lineNumber: 623,
                                                         columnNumber: 37
                                                     }, undefined)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "src/Co2.js",
-                                                lineNumber: 611,
+                                                lineNumber: 619,
                                                 columnNumber: 33
                                             }, undefined)
                                         ]
                                     }, void 0, true, {
                                         fileName: "src/Co2.js",
-                                        lineNumber: 578,
+                                        lineNumber: 586,
                                         columnNumber: 29
                                     }, undefined)
                                 ]
                             }, void 0, true, {
                                 fileName: "src/Co2.js",
-                                lineNumber: 570,
+                                lineNumber: 575,
                                 columnNumber: 25
                             }, undefined),
                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _colDefault.default), {
-                                children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _cropYieldDefault.default), {}, void 0, false, {
+                                children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _cropYieldDefault.default), {
+                                    crop: crop,
+                                    onCropChange: setCrop
+                                }, void 0, false, {
                                     fileName: "src/Co2.js",
-                                    lineNumber: 624,
+                                    lineNumber: 633,
                                     columnNumber: 29
                                 }, undefined)
                             }, void 0, false, {
                                 fileName: "src/Co2.js",
-                                lineNumber: 623,
+                                lineNumber: 632,
                                 columnNumber: 25
                             }, undefined)
                         ]
                     }, void 0, true, {
                         fileName: "src/Co2.js",
-                        lineNumber: 569,
+                        lineNumber: 574,
                         columnNumber: 21
                     }, undefined)
                 }, void 0, false, {
                     fileName: "src/Co2.js",
-                    lineNumber: 568,
+                    lineNumber: 573,
                     columnNumber: 17
                 }, undefined)
             }, void 0, false, {
                 fileName: "src/Co2.js",
-                lineNumber: 567,
+                lineNumber: 572,
                 columnNumber: 13
             }, undefined)
         ]
     }, void 0, true);
 };
-_s(Co2, "ijOfuoZrRA+64tMKhfAfyobh56Q=");
+_s(Co2, "OaLPd0I6EXAMzbSpDizp5IX37e0=");
 _c = Co2;
 exports.default = Co2;
 var _c;
@@ -249730,6 +249863,13 @@ $parcel$ReactRefreshHelpers$e0fa.prelude(module);
 try {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "CROPS", ()=>CROPS);
+parcelHelpers.export(exports, "DEFAULT_CROP", ()=>DEFAULT_CROP);
+parcelHelpers.export(exports, "getCrop", ()=>getCrop);
+// The WRSI stored for each location is computed for a standardised reference
+// crop. A crop that needs more water has a higher Kc_mid, so the index for a
+// crop is that standardised value divided by the crop's Kc_mid.
+parcelHelpers.export(exports, "cropWRSI", ()=>cropWRSI);
 var _jsxDevRuntime = require("react/jsx-dev-runtime");
 var _react = require("react");
 var _appContext = require("./AppContext");
@@ -249744,14 +249884,11 @@ var _formDefault = parcelHelpers.interopDefault(_form);
 var _dropdown = require("react-bootstrap/Dropdown");
 var _dropdownDefault = parcelHelpers.interopDefault(_dropdown);
 var _recharts = require("recharts");
-var _table = require("react-bootstrap/Table");
-var _tableDefault = parcelHelpers.interopDefault(_table);
 var _reactCountryFlag = require("react-country-flag");
 var _reactCountryFlagDefault = parcelHelpers.interopDefault(_reactCountryFlag);
 var _react1 = require("@mdi/react");
 var _js = require("@mdi/js");
 var _s = $RefreshSig$();
-// Crop coefficient (Kc_mid) data — FAO-56
 const CROPS = [
     {
         name: 'Maize (grain)',
@@ -249821,6 +249958,14 @@ const CROPS = [
         kc_mid: 1.15
     }
 ];
+const DEFAULT_CROP = 'Maize (grain)';
+function getCrop(name) {
+    return CROPS.find((c)=>c.name === name) || CROPS.find((c)=>c.name === DEFAULT_CROP) || CROPS[0];
+}
+function cropWRSI(value, kcMid) {
+    if (value == null || !isFinite(value) || !kcMid) return null;
+    return Math.min(100, Math.max(0, value / kcMid));
+}
 // All known metric columns from the crops table (WRSI first as default)
 const METRIC_OPTIONS = [
     'WRSI',
@@ -249883,15 +250028,22 @@ function addTrend(rows, xKey, yKey) {
             trend: parseFloat((m * r[xKey] + b).toFixed(4))
         }));
 }
-const CropYield = ()=>{
+const CropYield = ({ crop, onCropChange })=>{
     _s();
     const { position, dateRange, monthNames, downloadData, cities, city, country, convertCountry, address } = (0, _react.useContext)((0, _appContext.AppContext));
     const [metric, setMetric] = (0, _react.useState)('WRSI');
+    const [fallbackCrop, setFallbackCrop] = (0, _react.useState)(DEFAULT_CROP);
     const [selectedMonth, setSelectedMonth] = (0, _react.useState)(1);
     const [allData, setAllData] = (0, _react.useState)([]);
     const [annualData, setAnnualData] = (0, _react.useState)([]);
     const [monthlyData, setMonthlyData] = (0, _react.useState)([]);
     const [loading, setLoading] = (0, _react.useState)(false);
+    // The crop selection is owned by the parent (Co2) so the copy beside these
+    // charts describes the same crop; fall back to local state if used alone.
+    const selectedCrop = getCrop(crop ?? fallbackCrop);
+    const changeCrop = onCropChange ?? setFallbackCrop;
+    const kcMid = selectedCrop.kc_mid;
+    const seriesLabel = `WRSI \u{2014} ${selectedCrop.name}`;
     // Fetch from Supabase whenever position or dateRange changes
     (0, _react.useEffect)(()=>{
         if (!position || position.length < 2) return;
@@ -249916,7 +250068,7 @@ const CropYield = ()=>{
         position,
         dateRange
     ]);
-    // Build annual averages chart whenever allData or metric changes
+    // Build annual averages chart whenever allData, metric or crop changes
     (0, _react.useEffect)(()=>{
         if (allData.length === 0) {
             setAnnualData([]);
@@ -249935,14 +250087,15 @@ const CropYield = ()=>{
         });
         const rows = Object.entries(yearly).map(([year, { sum, count }])=>({
                 year: parseInt(year),
-                value: parseFloat((sum / count).toFixed(4))
+                value: parseFloat(cropWRSI(sum / count, kcMid).toFixed(4))
             })).sort((a, b)=>a.year - b.year);
         setAnnualData(rows.length >= 2 ? addTrend(rows, 'year', 'value') : rows);
     }, [
         allData,
-        metric
+        metric,
+        kcMid
     ]);
-    // Build monthly breakdown chart whenever allData or selectedMonth changes (always uses WRSI)
+    // Build monthly breakdown chart whenever allData, selectedMonth or crop changes
     (0, _react.useEffect)(()=>{
         if (allData.length === 0) {
             setMonthlyData([]);
@@ -249953,7 +250106,7 @@ const CropYield = ()=>{
             return parseInt(parts[1]) === parseInt(selectedMonth) && row['WRSI'] != null;
         }).map((row)=>({
                 year: parseInt(('' + row.date).split('-')[0]),
-                value: parseFloat(parseFloat(row['WRSI']).toFixed(4))
+                value: parseFloat(cropWRSI(parseFloat(row['WRSI']), kcMid).toFixed(4))
             })).sort((a, b)=>a.year - b.year);
         // average per year (multiple grid cells may exist)
         const byYear = {};
@@ -249972,9 +250125,33 @@ const CropYield = ()=>{
         setMonthlyData(averaged.length >= 2 ? addTrend(averaged, 'year', 'value') : averaged);
     }, [
         allData,
-        selectedMonth
+        selectedMonth,
+        kcMid
     ]);
     const handleMonthChange = (e)=>setSelectedMonth(parseInt(e.target.value));
+    const handleCropChange = (e)=>changeCrop(e.target.value);
+    const cropSelect = /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _formDefault.default).Select, {
+        value: selectedCrop.name,
+        onChange: handleCropChange,
+        "aria-label": "Crop",
+        title: "Crop",
+        children: CROPS.map((c)=>/*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("option", {
+                value: c.name,
+                children: [
+                    c.name,
+                    " \u2014 Kc ",
+                    c.kc_mid.toFixed(2)
+                ]
+            }, c.name, true, {
+                fileName: "src/CropYield.js",
+                lineNumber: 216,
+                columnNumber: 17
+            }, undefined))
+    }, void 0, false, {
+        fileName: "src/CropYield.js",
+        lineNumber: 214,
+        columnNumber: 9
+    }, undefined);
     return /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _jsxDevRuntime.Fragment), {
         children: [
             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("section", {
@@ -249983,7 +250160,9 @@ const CropYield = ()=>{
                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("header", {
                         children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("h3", {
                             children: [
-                                "Crop metrics in ",
+                                "Annual water requirement satisfaction for ",
+                                selectedCrop.name,
+                                " in ",
                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("span", {
                                     className: "location-highlight",
                                     children: [
@@ -249994,26 +250173,26 @@ const CropYield = ()=>{
                                                 svg: true
                                             }, void 0, false, {
                                                 fileName: "src/CropYield.js",
-                                                lineNumber: 194,
+                                                lineNumber: 227,
                                                 columnNumber: 62
                                             }, undefined)
                                         }, void 0, false, {
                                             fileName: "src/CropYield.js",
-                                            lineNumber: 194,
+                                            lineNumber: 227,
                                             columnNumber: 25
                                         }, undefined),
                                         /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("span", {
                                             children: city !== '' && city !== 'location' ? cities.filter((c)=>c.city.replaceAll(' ', '-').toLowerCase() === city)[0]?.city : address
                                         }, void 0, false, {
                                             fileName: "src/CropYield.js",
-                                            lineNumber: 195,
+                                            lineNumber: 228,
                                             columnNumber: 25
                                         }, undefined)
                                     ]
                                 }, void 0, true, {
                                     fileName: "src/CropYield.js",
-                                    lineNumber: 193,
-                                    columnNumber: 41
+                                    lineNumber: 226,
+                                    columnNumber: 90
                                 }, undefined),
                                 " from ",
                                 dateRange[0],
@@ -250022,12 +250201,12 @@ const CropYield = ()=>{
                             ]
                         }, void 0, true, {
                             fileName: "src/CropYield.js",
-                            lineNumber: 193,
+                            lineNumber: 226,
                             columnNumber: 21
                         }, undefined)
                     }, void 0, false, {
                         fileName: "src/CropYield.js",
-                        lineNumber: 192,
+                        lineNumber: 225,
                         columnNumber: 17
                     }, undefined),
                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
@@ -250036,10 +250215,11 @@ const CropYield = ()=>{
                             className: "justify-content-between",
                             children: [
                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _colDefault.default), {
-                                    xs: "auto"
+                                    xs: "auto",
+                                    children: cropSelect
                                 }, void 0, false, {
                                     fileName: "src/CropYield.js",
-                                    lineNumber: 201,
+                                    lineNumber: 234,
                                     columnNumber: 25
                                 }, undefined),
                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _colDefault.default), {
@@ -250053,24 +250233,27 @@ const CropYield = ()=>{
                                                         size: 1
                                                     }, void 0, false, {
                                                         fileName: "src/CropYield.js",
-                                                        lineNumber: 207,
+                                                        lineNumber: 240,
                                                         columnNumber: 37
                                                     }, undefined),
                                                     " Download"
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "src/CropYield.js",
-                                                lineNumber: 206,
+                                                lineNumber: 239,
                                                 columnNumber: 33
                                             }, undefined),
                                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _dropdownDefault.default).Menu, {
                                                 children: [
                                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _dropdownDefault.default).Item, {
-                                                        onClick: ()=>downloadData('csv', 'crop-annual'),
+                                                        onClick: ()=>downloadData('csv', 'crop-annual', null, {
+                                                                crop: selectedCrop.name,
+                                                                rows: annualData
+                                                            }),
                                                         children: "CSV"
                                                     }, void 0, false, {
                                                         fileName: "src/CropYield.js",
-                                                        lineNumber: 210,
+                                                        lineNumber: 243,
                                                         columnNumber: 37
                                                     }, undefined),
                                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _dropdownDefault.default).Item, {
@@ -250078,35 +250261,35 @@ const CropYield = ()=>{
                                                         children: "PNG"
                                                     }, void 0, false, {
                                                         fileName: "src/CropYield.js",
-                                                        lineNumber: 211,
+                                                        lineNumber: 244,
                                                         columnNumber: 37
                                                     }, undefined)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "src/CropYield.js",
-                                                lineNumber: 209,
+                                                lineNumber: 242,
                                                 columnNumber: 33
                                             }, undefined)
                                         ]
                                     }, void 0, true, {
                                         fileName: "src/CropYield.js",
-                                        lineNumber: 205,
+                                        lineNumber: 238,
                                         columnNumber: 29
                                     }, undefined)
                                 }, void 0, false, {
                                     fileName: "src/CropYield.js",
-                                    lineNumber: 204,
+                                    lineNumber: 237,
                                     columnNumber: 25
                                 }, undefined)
                             ]
                         }, void 0, true, {
                             fileName: "src/CropYield.js",
-                            lineNumber: 200,
+                            lineNumber: 233,
                             columnNumber: 21
                         }, undefined)
                     }, void 0, false, {
                         fileName: "src/CropYield.js",
-                        lineNumber: 199,
+                        lineNumber: 232,
                         columnNumber: 17
                     }, undefined),
                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
@@ -250121,7 +250304,7 @@ const CropYield = ()=>{
                                         children: "Loading\u2026"
                                     }, void 0, false, {
                                         fileName: "src/CropYield.js",
-                                        lineNumber: 220,
+                                        lineNumber: 253,
                                         columnNumber: 37
                                     }, undefined),
                                     !loading && annualData.length === 0 && /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("p", {
@@ -250129,7 +250312,7 @@ const CropYield = ()=>{
                                         children: "No data available for this location and date range."
                                     }, void 0, false, {
                                         fileName: "src/CropYield.js",
-                                        lineNumber: 222,
+                                        lineNumber: 255,
                                         columnNumber: 29
                                     }, undefined),
                                     !loading && annualData.length > 0 && /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _recharts.ResponsiveContainer), {
@@ -250148,24 +250331,24 @@ const CropYield = ()=>{
                                                     dataKey: "year"
                                                 }, void 0, false, {
                                                     fileName: "src/CropYield.js",
-                                                    lineNumber: 227,
+                                                    lineNumber: 260,
                                                     columnNumber: 37
                                                 }, undefined),
                                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _recharts.YAxis), {}, void 0, false, {
                                                     fileName: "src/CropYield.js",
-                                                    lineNumber: 228,
+                                                    lineNumber: 261,
                                                     columnNumber: 37
                                                 }, undefined),
                                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _recharts.Tooltip), {}, void 0, false, {
                                                     fileName: "src/CropYield.js",
-                                                    lineNumber: 229,
+                                                    lineNumber: 262,
                                                     columnNumber: 37
                                                 }, undefined),
                                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _recharts.CartesianGrid), {
                                                     stroke: "#f5f5f5"
                                                 }, void 0, false, {
                                                     fileName: "src/CropYield.js",
-                                                    lineNumber: 230,
+                                                    lineNumber: 263,
                                                     columnNumber: 37
                                                 }, undefined),
                                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _recharts.Line), {
@@ -250174,10 +250357,10 @@ const CropYield = ()=>{
                                                     stroke: "#2b8cbe",
                                                     dot: false,
                                                     strokeWidth: 2,
-                                                    name: humanizeMetric(metric)
+                                                    name: seriesLabel
                                                 }, void 0, false, {
                                                     fileName: "src/CropYield.js",
-                                                    lineNumber: 231,
+                                                    lineNumber: 264,
                                                     columnNumber: 37
                                                 }, undefined),
                                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _recharts.Line), {
@@ -250190,24 +250373,24 @@ const CropYield = ()=>{
                                                     name: "Trend"
                                                 }, void 0, false, {
                                                     fileName: "src/CropYield.js",
-                                                    lineNumber: 232,
+                                                    lineNumber: 265,
                                                     columnNumber: 37
                                                 }, undefined)
                                             ]
                                         }, void 0, true, {
                                             fileName: "src/CropYield.js",
-                                            lineNumber: 226,
+                                            lineNumber: 259,
                                             columnNumber: 33
                                         }, undefined)
                                     }, void 0, false, {
                                         fileName: "src/CropYield.js",
-                                        lineNumber: 225,
+                                        lineNumber: 258,
                                         columnNumber: 29
                                     }, undefined)
                                 ]
                             }, void 0, true, {
                                 fileName: "src/CropYield.js",
-                                lineNumber: 219,
+                                lineNumber: 252,
                                 columnNumber: 21
                             }, undefined),
                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("footer", {
@@ -250225,15 +250408,18 @@ const CropYield = ()=>{
                                                             }
                                                         }, void 0, false, {
                                                             fileName: "src/CropYield.js",
-                                                            lineNumber: 240,
+                                                            lineNumber: 273,
                                                             columnNumber: 63
                                                         }, undefined),
                                                         " ",
-                                                        humanizeMetric(metric)
+                                                        seriesLabel,
+                                                        " (Kc mid ",
+                                                        kcMid.toFixed(2),
+                                                        ")"
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "src/CropYield.js",
-                                                    lineNumber: 240,
+                                                    lineNumber: 273,
                                                     columnNumber: 33
                                                 }, undefined),
                                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("span", {
@@ -250246,20 +250432,20 @@ const CropYield = ()=>{
                                                             }
                                                         }, void 0, false, {
                                                             fileName: "src/CropYield.js",
-                                                            lineNumber: 241,
+                                                            lineNumber: 274,
                                                             columnNumber: 63
                                                         }, undefined),
                                                         " Trend"
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "src/CropYield.js",
-                                                    lineNumber: 241,
+                                                    lineNumber: 274,
                                                     columnNumber: 33
                                                 }, undefined)
                                             ]
                                         }, void 0, true, {
                                             fileName: "src/CropYield.js",
-                                            lineNumber: 239,
+                                            lineNumber: 272,
                                             columnNumber: 29
                                         }, undefined),
                                         /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _colDefault.default), {
@@ -250273,36 +250459,36 @@ const CropYield = ()=>{
                                                     children: "FLDAS Noah Land Surface Model"
                                                 }, void 0, false, {
                                                     fileName: "src/CropYield.js",
-                                                    lineNumber: 244,
+                                                    lineNumber: 277,
                                                     columnNumber: 41
                                                 }, undefined)
                                             ]
                                         }, void 0, true, {
                                             fileName: "src/CropYield.js",
-                                            lineNumber: 243,
+                                            lineNumber: 276,
                                             columnNumber: 29
                                         }, undefined)
                                     ]
                                 }, void 0, true, {
                                     fileName: "src/CropYield.js",
-                                    lineNumber: 238,
+                                    lineNumber: 271,
                                     columnNumber: 25
                                 }, undefined)
                             }, void 0, false, {
                                 fileName: "src/CropYield.js",
-                                lineNumber: 237,
+                                lineNumber: 270,
                                 columnNumber: 21
                             }, undefined)
                         ]
                     }, void 0, true, {
                         fileName: "src/CropYield.js",
-                        lineNumber: 218,
+                        lineNumber: 251,
                         columnNumber: 17
                     }, undefined)
                 ]
             }, void 0, true, {
                 fileName: "src/CropYield.js",
-                lineNumber: 191,
+                lineNumber: 224,
                 columnNumber: 13
             }, undefined),
             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("section", {
@@ -250314,7 +250500,9 @@ const CropYield = ()=>{
                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("header", {
                         children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("h3", {
                             children: [
-                                "Monthly Water Requirement Satisfaction Index for ",
+                                "Monthly water requirement satisfaction for ",
+                                selectedCrop.name,
+                                " in ",
                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("span", {
                                     className: "location-highlight",
                                     children: [
@@ -250325,26 +250513,26 @@ const CropYield = ()=>{
                                                 svg: true
                                             }, void 0, false, {
                                                 fileName: "src/CropYield.js",
-                                                lineNumber: 255,
+                                                lineNumber: 288,
                                                 columnNumber: 62
                                             }, undefined)
                                         }, void 0, false, {
                                             fileName: "src/CropYield.js",
-                                            lineNumber: 255,
+                                            lineNumber: 288,
                                             columnNumber: 25
                                         }, undefined),
                                         /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("span", {
                                             children: city !== '' && city !== 'location' ? cities.filter((c)=>c.city.replaceAll(' ', '-').toLowerCase() === city)[0]?.city : address
                                         }, void 0, false, {
                                             fileName: "src/CropYield.js",
-                                            lineNumber: 256,
+                                            lineNumber: 289,
                                             columnNumber: 25
                                         }, undefined)
                                     ]
                                 }, void 0, true, {
                                     fileName: "src/CropYield.js",
-                                    lineNumber: 254,
-                                    columnNumber: 74
+                                    lineNumber: 287,
+                                    columnNumber: 91
                                 }, undefined),
                                 " from ",
                                 dateRange[0],
@@ -250353,12 +250541,12 @@ const CropYield = ()=>{
                             ]
                         }, void 0, true, {
                             fileName: "src/CropYield.js",
-                            lineNumber: 254,
+                            lineNumber: 287,
                             columnNumber: 21
                         }, undefined)
                     }, void 0, false, {
                         fileName: "src/CropYield.js",
-                        lineNumber: 253,
+                        lineNumber: 286,
                         columnNumber: 17
                     }, undefined),
                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
@@ -250366,6 +250554,14 @@ const CropYield = ()=>{
                         children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _rowDefault.default), {
                             className: "justify-content-between",
                             children: [
+                                /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _colDefault.default), {
+                                    xs: "auto",
+                                    children: cropSelect
+                                }, void 0, false, {
+                                    fileName: "src/CropYield.js",
+                                    lineNumber: 295,
+                                    columnNumber: 25
+                                }, undefined),
                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _colDefault.default), {
                                     xs: "auto",
                                     children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _formDefault.default).Select, {
@@ -250376,17 +250572,17 @@ const CropYield = ()=>{
                                                 children: name
                                             }, i + 1, false, {
                                                 fileName: "src/CropYield.js",
-                                                lineNumber: 265,
+                                                lineNumber: 301,
                                                 columnNumber: 37
                                             }, undefined))
                                     }, void 0, false, {
                                         fileName: "src/CropYield.js",
-                                        lineNumber: 263,
+                                        lineNumber: 299,
                                         columnNumber: 29
                                     }, undefined)
                                 }, void 0, false, {
                                     fileName: "src/CropYield.js",
-                                    lineNumber: 262,
+                                    lineNumber: 298,
                                     columnNumber: 25
                                 }, undefined),
                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _colDefault.default), {
@@ -250400,24 +250596,27 @@ const CropYield = ()=>{
                                                         size: 1
                                                     }, void 0, false, {
                                                         fileName: "src/CropYield.js",
-                                                        lineNumber: 272,
+                                                        lineNumber: 308,
                                                         columnNumber: 37
                                                     }, undefined),
                                                     " Download"
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "src/CropYield.js",
-                                                lineNumber: 271,
+                                                lineNumber: 307,
                                                 columnNumber: 33
                                             }, undefined),
                                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _dropdownDefault.default).Menu, {
                                                 children: [
                                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _dropdownDefault.default).Item, {
-                                                        onClick: ()=>downloadData('csv', 'crop-monthly-breakdown', selectedMonth),
+                                                        onClick: ()=>downloadData('csv', 'crop-monthly-breakdown', selectedMonth, {
+                                                                crop: selectedCrop.name,
+                                                                rows: monthlyData
+                                                            }),
                                                         children: "CSV"
                                                     }, void 0, false, {
                                                         fileName: "src/CropYield.js",
-                                                        lineNumber: 275,
+                                                        lineNumber: 311,
                                                         columnNumber: 37
                                                     }, undefined),
                                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _dropdownDefault.default).Item, {
@@ -250425,35 +250624,35 @@ const CropYield = ()=>{
                                                         children: "PNG"
                                                     }, void 0, false, {
                                                         fileName: "src/CropYield.js",
-                                                        lineNumber: 276,
+                                                        lineNumber: 312,
                                                         columnNumber: 37
                                                     }, undefined)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "src/CropYield.js",
-                                                lineNumber: 274,
+                                                lineNumber: 310,
                                                 columnNumber: 33
                                             }, undefined)
                                         ]
                                     }, void 0, true, {
                                         fileName: "src/CropYield.js",
-                                        lineNumber: 270,
+                                        lineNumber: 306,
                                         columnNumber: 29
                                     }, undefined)
                                 }, void 0, false, {
                                     fileName: "src/CropYield.js",
-                                    lineNumber: 269,
+                                    lineNumber: 305,
                                     columnNumber: 25
                                 }, undefined)
                             ]
                         }, void 0, true, {
                             fileName: "src/CropYield.js",
-                            lineNumber: 261,
+                            lineNumber: 294,
                             columnNumber: 21
                         }, undefined)
                     }, void 0, false, {
                         fileName: "src/CropYield.js",
-                        lineNumber: 260,
+                        lineNumber: 293,
                         columnNumber: 17
                     }, undefined),
                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
@@ -250468,7 +250667,7 @@ const CropYield = ()=>{
                                         children: "Loading\u2026"
                                     }, void 0, false, {
                                         fileName: "src/CropYield.js",
-                                        lineNumber: 285,
+                                        lineNumber: 321,
                                         columnNumber: 37
                                     }, undefined),
                                     !loading && monthlyData.length === 0 && /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("p", {
@@ -250476,7 +250675,7 @@ const CropYield = ()=>{
                                         children: "No data available for this month and location."
                                     }, void 0, false, {
                                         fileName: "src/CropYield.js",
-                                        lineNumber: 287,
+                                        lineNumber: 323,
                                         columnNumber: 29
                                     }, undefined),
                                     !loading && monthlyData.length > 0 && /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _recharts.ResponsiveContainer), {
@@ -250495,24 +250694,24 @@ const CropYield = ()=>{
                                                     dataKey: "year"
                                                 }, void 0, false, {
                                                     fileName: "src/CropYield.js",
-                                                    lineNumber: 292,
+                                                    lineNumber: 328,
                                                     columnNumber: 37
                                                 }, undefined),
                                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _recharts.YAxis), {}, void 0, false, {
                                                     fileName: "src/CropYield.js",
-                                                    lineNumber: 293,
+                                                    lineNumber: 329,
                                                     columnNumber: 37
                                                 }, undefined),
                                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _recharts.Tooltip), {}, void 0, false, {
                                                     fileName: "src/CropYield.js",
-                                                    lineNumber: 294,
+                                                    lineNumber: 330,
                                                     columnNumber: 37
                                                 }, undefined),
                                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _recharts.CartesianGrid), {
                                                     stroke: "#f5f5f5"
                                                 }, void 0, false, {
                                                     fileName: "src/CropYield.js",
-                                                    lineNumber: 295,
+                                                    lineNumber: 331,
                                                     columnNumber: 37
                                                 }, undefined),
                                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _recharts.Line), {
@@ -250521,10 +250720,10 @@ const CropYield = ()=>{
                                                     stroke: "#2b8cbe",
                                                     dot: false,
                                                     strokeWidth: 2,
-                                                    name: "WRSI"
+                                                    name: seriesLabel
                                                 }, void 0, false, {
                                                     fileName: "src/CropYield.js",
-                                                    lineNumber: 296,
+                                                    lineNumber: 332,
                                                     columnNumber: 37
                                                 }, undefined),
                                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _recharts.Line), {
@@ -250537,24 +250736,24 @@ const CropYield = ()=>{
                                                     name: "Trend"
                                                 }, void 0, false, {
                                                     fileName: "src/CropYield.js",
-                                                    lineNumber: 297,
+                                                    lineNumber: 333,
                                                     columnNumber: 37
                                                 }, undefined)
                                             ]
                                         }, void 0, true, {
                                             fileName: "src/CropYield.js",
-                                            lineNumber: 291,
+                                            lineNumber: 327,
                                             columnNumber: 33
                                         }, undefined)
                                     }, void 0, false, {
                                         fileName: "src/CropYield.js",
-                                        lineNumber: 290,
+                                        lineNumber: 326,
                                         columnNumber: 29
                                     }, undefined)
                                 ]
                             }, void 0, true, {
                                 fileName: "src/CropYield.js",
-                                lineNumber: 284,
+                                lineNumber: 320,
                                 columnNumber: 21
                             }, undefined),
                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("footer", {
@@ -250572,16 +250771,18 @@ const CropYield = ()=>{
                                                             }
                                                         }, void 0, false, {
                                                             fileName: "src/CropYield.js",
-                                                            lineNumber: 305,
+                                                            lineNumber: 341,
                                                             columnNumber: 63
                                                         }, undefined),
-                                                        " WRSI (",
+                                                        " ",
+                                                        seriesLabel,
+                                                        " (",
                                                         monthNames[selectedMonth - 1],
                                                         ")"
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "src/CropYield.js",
-                                                    lineNumber: 305,
+                                                    lineNumber: 341,
                                                     columnNumber: 33
                                                 }, undefined),
                                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("span", {
@@ -250594,20 +250795,20 @@ const CropYield = ()=>{
                                                             }
                                                         }, void 0, false, {
                                                             fileName: "src/CropYield.js",
-                                                            lineNumber: 306,
+                                                            lineNumber: 342,
                                                             columnNumber: 63
                                                         }, undefined),
                                                         " Trend"
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "src/CropYield.js",
-                                                    lineNumber: 306,
+                                                    lineNumber: 342,
                                                     columnNumber: 33
                                                 }, undefined)
                                             ]
                                         }, void 0, true, {
                                             fileName: "src/CropYield.js",
-                                            lineNumber: 304,
+                                            lineNumber: 340,
                                             columnNumber: 29
                                         }, undefined),
                                         /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _colDefault.default), {
@@ -250621,391 +250822,42 @@ const CropYield = ()=>{
                                                     children: "FLDAS Noah Land Surface Model"
                                                 }, void 0, false, {
                                                     fileName: "src/CropYield.js",
-                                                    lineNumber: 309,
+                                                    lineNumber: 345,
                                                     columnNumber: 41
                                                 }, undefined)
                                             ]
                                         }, void 0, true, {
                                             fileName: "src/CropYield.js",
-                                            lineNumber: 308,
+                                            lineNumber: 344,
                                             columnNumber: 29
                                         }, undefined)
                                     ]
                                 }, void 0, true, {
                                     fileName: "src/CropYield.js",
-                                    lineNumber: 303,
+                                    lineNumber: 339,
                                     columnNumber: 25
                                 }, undefined)
                             }, void 0, false, {
                                 fileName: "src/CropYield.js",
-                                lineNumber: 302,
+                                lineNumber: 338,
                                 columnNumber: 21
                             }, undefined)
                         ]
                     }, void 0, true, {
                         fileName: "src/CropYield.js",
-                        lineNumber: 283,
+                        lineNumber: 319,
                         columnNumber: 17
                     }, undefined)
                 ]
             }, void 0, true, {
                 fileName: "src/CropYield.js",
-                lineNumber: 252,
+                lineNumber: 285,
                 columnNumber: 13
-            }, undefined),
-            annualData.length > 0 && (()=>{
-                const avgWRSI = annualData.reduce((s, r)=>s + r.value, 0) / annualData.length;
-                const getStress = (implied)=>{
-                    if (implied >= 90) return {
-                        label: 'No stress',
-                        color: '#1a9641'
-                    };
-                    if (implied >= 70) return {
-                        label: 'Mild stress',
-                        color: '#a6d96a'
-                    };
-                    if (implied >= 50) return {
-                        label: 'Moderate stress',
-                        color: '#fdae61'
-                    };
-                    if (implied >= 30) return {
-                        label: 'Severe stress',
-                        color: '#d7191c'
-                    };
-                    return {
-                        label: 'Crop failure risk',
-                        color: '#7b0000'
-                    };
-                };
-                const STRESS_SCALE = [
-                    {
-                        range: "90\u2013100",
-                        label: 'No stress',
-                        color: '#1a9641'
-                    },
-                    {
-                        range: "70\u201389",
-                        label: 'Mild stress',
-                        color: '#a6d96a'
-                    },
-                    {
-                        range: "50\u201369",
-                        label: 'Moderate stress',
-                        color: '#fdae61'
-                    },
-                    {
-                        range: "30\u201349",
-                        label: 'Severe stress',
-                        color: '#d7191c'
-                    },
-                    {
-                        range: '< 30',
-                        label: 'Crop failure risk',
-                        color: '#7b0000'
-                    }
-                ];
-                return /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("section", {
-                    className: "chart-wrapper",
-                    style: {
-                        marginTop: '2rem'
-                    },
-                    children: [
-                        /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("header", {
-                            children: [
-                                /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("h3", {
-                                    children: [
-                                        "Crop water stress in ",
-                                        /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("span", {
-                                            className: "location-highlight",
-                                            children: [
-                                                /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
-                                                    className: "country-flag-circle",
-                                                    children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _reactCountryFlagDefault.default), {
-                                                        countryCode: convertCountry('iso3', country).iso2,
-                                                        svg: true
-                                                    }, void 0, false, {
-                                                        fileName: "src/CropYield.js",
-                                                        lineNumber: 340,
-                                                        columnNumber: 70
-                                                    }, undefined)
-                                                }, void 0, false, {
-                                                    fileName: "src/CropYield.js",
-                                                    lineNumber: 340,
-                                                    columnNumber: 33
-                                                }, undefined),
-                                                /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("span", {
-                                                    children: city !== '' && city !== 'location' ? cities.filter((c)=>c.city.replaceAll(' ', '-').toLowerCase() === city)[0]?.city : address
-                                                }, void 0, false, {
-                                                    fileName: "src/CropYield.js",
-                                                    lineNumber: 341,
-                                                    columnNumber: 33
-                                                }, undefined)
-                                            ]
-                                        }, void 0, true, {
-                                            fileName: "src/CropYield.js",
-                                            lineNumber: 339,
-                                            columnNumber: 54
-                                        }, undefined),
-                                        " from ",
-                                        dateRange[0],
-                                        " to ",
-                                        dateRange[1]
-                                    ]
-                                }, void 0, true, {
-                                    fileName: "src/CropYield.js",
-                                    lineNumber: 339,
-                                    columnNumber: 29
-                                }, undefined),
-                                /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("p", {
-                                    className: "small mb-0",
-                                    style: {
-                                        color: 'white'
-                                    },
-                                    children: [
-                                        "Based on average WRSI of ",
-                                        /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("strong", {
-                                            children: avgWRSI.toFixed(1)
-                                        }, void 0, false, {
-                                            fileName: "src/CropYield.js",
-                                            lineNumber: 344,
-                                            columnNumber: 58
-                                        }, undefined),
-                                        " for this location and period. Implied crop WRSI = WRSI \xf7 Kc",
-                                        /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("sub", {
-                                            children: "mid"
-                                        }, void 0, false, {
-                                            fileName: "src/CropYield.js",
-                                            lineNumber: 345,
-                                            columnNumber: 62
-                                        }, undefined),
-                                        "."
-                                    ]
-                                }, void 0, true, {
-                                    fileName: "src/CropYield.js",
-                                    lineNumber: 343,
-                                    columnNumber: 29
-                                }, undefined)
-                            ]
-                        }, void 0, true, {
-                            fileName: "src/CropYield.js",
-                            lineNumber: 338,
-                            columnNumber: 25
-                        }, undefined),
-                        /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
-                            className: "table-container",
-                            children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _tableDefault.default), {
-                                striped: true,
-                                hover: true,
-                                children: [
-                                    /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("thead", {
-                                        children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("tr", {
-                                            children: [
-                                                /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("th", {
-                                                    children: "Crop"
-                                                }, void 0, false, {
-                                                    fileName: "src/CropYield.js",
-                                                    lineNumber: 353,
-                                                    columnNumber: 41
-                                                }, undefined),
-                                                /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("th", {
-                                                    style: {
-                                                        width: '80px'
-                                                    },
-                                                    className: "text-end",
-                                                    children: "Kc mid"
-                                                }, void 0, false, {
-                                                    fileName: "src/CropYield.js",
-                                                    lineNumber: 354,
-                                                    columnNumber: 41
-                                                }, undefined),
-                                                /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("th", {
-                                                    style: {
-                                                        width: '120px'
-                                                    },
-                                                    className: "text-end",
-                                                    children: "Implied WRSI"
-                                                }, void 0, false, {
-                                                    fileName: "src/CropYield.js",
-                                                    lineNumber: 355,
-                                                    columnNumber: 41
-                                                }, undefined),
-                                                /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("th", {
-                                                    style: {
-                                                        width: '160px'
-                                                    },
-                                                    className: "text-end",
-                                                    children: "Stress category"
-                                                }, void 0, false, {
-                                                    fileName: "src/CropYield.js",
-                                                    lineNumber: 356,
-                                                    columnNumber: 41
-                                                }, undefined)
-                                            ]
-                                        }, void 0, true, {
-                                            fileName: "src/CropYield.js",
-                                            lineNumber: 352,
-                                            columnNumber: 37
-                                        }, undefined)
-                                    }, void 0, false, {
-                                        fileName: "src/CropYield.js",
-                                        lineNumber: 351,
-                                        columnNumber: 33
-                                    }, undefined),
-                                    /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("tbody", {
-                                        children: CROPS.map((crop)=>{
-                                            const implied = avgWRSI / crop.kc_mid;
-                                            const { label, color } = getStress(implied);
-                                            return /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("tr", {
-                                                children: [
-                                                    /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("td", {
-                                                        children: crop.name
-                                                    }, void 0, false, {
-                                                        fileName: "src/CropYield.js",
-                                                        lineNumber: 365,
-                                                        columnNumber: 49
-                                                    }, undefined),
-                                                    /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("td", {
-                                                        className: "text-end",
-                                                        children: crop.kc_mid.toFixed(2)
-                                                    }, void 0, false, {
-                                                        fileName: "src/CropYield.js",
-                                                        lineNumber: 366,
-                                                        columnNumber: 49
-                                                    }, undefined),
-                                                    /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("td", {
-                                                        className: "text-end",
-                                                        children: implied.toFixed(1)
-                                                    }, void 0, false, {
-                                                        fileName: "src/CropYield.js",
-                                                        lineNumber: 367,
-                                                        columnNumber: 49
-                                                    }, undefined),
-                                                    /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("td", {
-                                                        className: "text-end",
-                                                        children: [
-                                                            label,
-                                                            /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
-                                                                className: "legend-box",
-                                                                style: {
-                                                                    backgroundColor: color
-                                                                }
-                                                            }, void 0, false, {
-                                                                fileName: "src/CropYield.js",
-                                                                lineNumber: 370,
-                                                                columnNumber: 53
-                                                            }, undefined)
-                                                        ]
-                                                    }, void 0, true, {
-                                                        fileName: "src/CropYield.js",
-                                                        lineNumber: 368,
-                                                        columnNumber: 49
-                                                    }, undefined)
-                                                ]
-                                            }, crop.name, true, {
-                                                fileName: "src/CropYield.js",
-                                                lineNumber: 364,
-                                                columnNumber: 45
-                                            }, undefined);
-                                        })
-                                    }, void 0, false, {
-                                        fileName: "src/CropYield.js",
-                                        lineNumber: 359,
-                                        columnNumber: 33
-                                    }, undefined)
-                                ]
-                            }, void 0, true, {
-                                fileName: "src/CropYield.js",
-                                lineNumber: 350,
-                                columnNumber: 29
-                            }, undefined)
-                        }, void 0, false, {
-                            fileName: "src/CropYield.js",
-                            lineNumber: 349,
-                            columnNumber: 25
-                        }, undefined),
-                        /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("footer", {
-                            children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _rowDefault.default), {
-                                children: [
-                                    /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _colDefault.default), {
-                                        children: STRESS_SCALE.map((s)=>/*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
-                                                className: "legend-item",
-                                                children: [
-                                                    /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
-                                                        className: "legend-item-color",
-                                                        style: {
-                                                            backgroundColor: s.color
-                                                        }
-                                                    }, void 0, false, {
-                                                        fileName: "src/CropYield.js",
-                                                        lineNumber: 384,
-                                                        columnNumber: 45
-                                                    }, undefined),
-                                                    /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
-                                                        className: "legend-item-label",
-                                                        children: [
-                                                            s.range,
-                                                            " \u2014 ",
-                                                            s.label
-                                                        ]
-                                                    }, void 0, true, {
-                                                        fileName: "src/CropYield.js",
-                                                        lineNumber: 385,
-                                                        columnNumber: 45
-                                                    }, undefined)
-                                                ]
-                                            }, s.range, true, {
-                                                fileName: "src/CropYield.js",
-                                                lineNumber: 383,
-                                                columnNumber: 41
-                                            }, undefined))
-                                    }, void 0, false, {
-                                        fileName: "src/CropYield.js",
-                                        lineNumber: 381,
-                                        columnNumber: 33
-                                    }, undefined),
-                                    /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _colDefault.default), {
-                                        xs: "auto",
-                                        className: "text-muted small align-self-end",
-                                        children: [
-                                            "Source: ",
-                                            /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("a", {
-                                                href: "https://www.fao.org/4/x0490e/x0490e00.htm",
-                                                target: "_blank",
-                                                rel: "noreferrer",
-                                                children: "FAO-56 crop coefficients"
-                                            }, void 0, false, {
-                                                fileName: "src/CropYield.js",
-                                                lineNumber: 390,
-                                                columnNumber: 45
-                                            }, undefined)
-                                        ]
-                                    }, void 0, true, {
-                                        fileName: "src/CropYield.js",
-                                        lineNumber: 389,
-                                        columnNumber: 33
-                                    }, undefined)
-                                ]
-                            }, void 0, true, {
-                                fileName: "src/CropYield.js",
-                                lineNumber: 380,
-                                columnNumber: 29
-                            }, undefined)
-                        }, void 0, false, {
-                            fileName: "src/CropYield.js",
-                            lineNumber: 379,
-                            columnNumber: 25
-                        }, undefined)
-                    ]
-                }, void 0, true, {
-                    fileName: "src/CropYield.js",
-                    lineNumber: 337,
-                    columnNumber: 21
-                }, undefined);
-            })()
+            }, undefined)
         ]
     }, void 0, true);
 };
-_s(CropYield, "8tbcTnKEp4gk/iTz6HXdlTF8I70=");
+_s(CropYield, "2OYG/zOYn3Ucb6Ok7L2NxrV1y5o=");
 _c = CropYield;
 exports.default = CropYield;
 var _c;
@@ -251016,6 +250868,6 @@ $RefreshReg$(_c, "CropYield");
   globalThis.$RefreshReg$ = prevRefreshReg;
   globalThis.$RefreshSig$ = prevRefreshSig;
 }
-},{"react/jsx-dev-runtime":"dVPUn","react":"jMk1U","./AppContext":"hW9bN","./supabase":"baEbC","react-bootstrap/Row":"2DPD4","react-bootstrap/Col":"6x0qd","react-bootstrap/Form":"6LPqw","react-bootstrap/Dropdown":"hUXGf","recharts":"k9rge","react-bootstrap/Table":"9NRQ4","react-country-flag":"5BJMt","@mdi/react":"se5wE","@mdi/js":"gPLwB","@parcel/transformer-js/src/esmodule-helpers.js":"jnFvT","@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js":"7h6Pi"}],"atTOW":[function() {},{}]},["eiPiS","a0t4e"], "a0t4e", "parcelRequire0ed3", {}, null, null, "http://localhost:45465")
+},{"react/jsx-dev-runtime":"dVPUn","react":"jMk1U","./AppContext":"hW9bN","./supabase":"baEbC","react-bootstrap/Row":"2DPD4","react-bootstrap/Col":"6x0qd","react-bootstrap/Form":"6LPqw","react-bootstrap/Dropdown":"hUXGf","recharts":"k9rge","react-country-flag":"5BJMt","@mdi/react":"se5wE","@mdi/js":"gPLwB","@parcel/transformer-js/src/esmodule-helpers.js":"jnFvT","@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js":"7h6Pi"}],"atTOW":[function() {},{}]},["baKTK","a0t4e"], "a0t4e", "parcelRequire0ed3", {}, null, null, "http://localhost:38381")
 
 //# sourceMappingURL=climate-observer.31b563d9.js.map

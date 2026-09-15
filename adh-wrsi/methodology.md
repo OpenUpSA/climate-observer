@@ -112,6 +112,19 @@ cell and spatially averaged (not the ratio of spatial means). The result
 is clipped to [0, 100] — values below 0 are set to 0, above 100 are set
 to 100.
 
+As stored, this is the value for a standardised reference crop (ETo is
+defined for a hypothetical short-grass surface). The Climate Observer
+turns it into a crop-specific figure with the crop's mid-season
+coefficient from FAO-56 (Kc_mid):
+
+```
+WRSI_crop = clip(WRSI / Kc_mid, 0, 100)
+```
+
+A crop that needs more water has a higher Kc_mid and so a lower index in
+the same conditions. The coefficients offered in the interface are
+listed in `src/CropYield.js`.
+
 ---
 
 ## Reference

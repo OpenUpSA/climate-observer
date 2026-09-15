@@ -90,7 +90,9 @@ These are the "we'll pretend this is true" choices baked into the method:
 
 1. **The reference plant is a short grass field.** The ETo formula is
    calibrated to a standard "reference crop" (a hypothetical healthy grass),
-   not to maize, wheat, etc. So WRSI here reflects grass-like demand.
+   not to maize, wheat, etc. So the stored WRSI reflects grass-like demand.
+   The Climate Observer divides it by the selected crop's Kc_mid to show a
+   specific crop (see `methodology.md`).
 
 2. **Soil heat stored/released underground is ignored** (`G ≈ 0`). For
    monthly averages this is a standard, reasonable simplification.
@@ -149,4 +151,5 @@ These are the "we'll pretend this is true" choices baked into the method:
 > happiness" score (WRSI) for each month and location, by comparing how much
 > water plants actually used versus how much a reference crop would have
 > wanted — useful for tracking drought, but dependent on model accuracy and
-> several simplifying assumptions.
+> several simplifying assumptions. The app scales that score to the crop you
+> select using the crop's Kc_mid.
