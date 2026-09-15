@@ -107,8 +107,11 @@ These are the "we'll pretend this is true" choices baked into the method:
    and *then* averages the squares — it does not average the weather first.
    This is the more correct way to do it.
 
-6. **Scores are clamped to 0–100.** Anything below 0 is reported as 0, and
-   anything above 100 is reported as 100.
+6. **Scores are floored at 0 but not capped at 100.** A negative ratio
+   (possible from modelled condensation) is reported as 0. Values above
+   100 are kept: they mean the water supply was more than a reference
+   grass crop would have used, which is what makes it possible to work
+   out how a thirstier crop like maize or sugarcane fares.
 
 ---
 
@@ -139,9 +142,8 @@ These are the "we'll pretend this is true" choices baked into the method:
    close to zero, making the division unstable. The code guards against
    crashes, but those months should be interpreted with care.
 
-7. **Clipping hides extremes.** Because scores are forced into 0–100, a
-   severe deficit (e.g. −20) is shown as 0, so you lose information about
-   *how bad* a bad month really was.
+7. **A floor of 0 hides deficits.** A severe deficit (e.g. −20) is shown as
+   0, so you lose information about *how bad* a bad month really was.
 
 ---
 

@@ -3,3 +3,16 @@
 node_modules
 .cache
 .env
+
+# adh-wrsi pipeline
+# locations_rows.csv IS tracked (it is a required input); these are not.
+adh-wrsi/.venv/
+adh-wrsi/__pycache__/
+adh-wrsi/FLDAS_NOAH01_C_GL_M_001/
+adh-wrsi/timeseries.csv
+adh-wrsi/blocks_monthly.csv
+adh-wrsi/rebuild.log
+adh-wrsi/backup.log
+adh-wrsi/backup_wrsi_before.csv.gz
+adh-wrsi/blocks_monthly_rebuilt.csv
+adh-wrsi/upload.log

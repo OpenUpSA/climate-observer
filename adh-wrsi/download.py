@@ -3,40 +3,58 @@
 Python script for downloading data from the NASA CMR API
 
 Requirements:
-    > pip install tqdm
+    > pip install tqdm earthaccess requests
 
-To run the script: `python download_files_FLDAS_NOAH01_C_GL_M_001.py`
+Credentials are picked up by earthaccess in its usual order: ``~/.netrc``
+first, then ``EARTHDATA_USERNAME`` / ``EARTHDATA_PASSWORD``, then an
+interactive prompt. For unattended runs create ``~/.netrc`` containing::
+
+    machine urs.earthdata.nasa.gov login <user> password <pass>
+
+and ``chmod 600 ~/.netrc``.
+
+To run the script: `python download.py`
+Optional environment overrides:
+    FLDAS_TEMPORAL   e.g. "1993-01-01,2026-12-31"  (default below)
+    FLDAS_DOWNLOAD_DIR   where the NetCDF files are written
+    MAX_WORKERS      parallel downloads (default 5)
 """
 
 import os
 import requests
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from getpass import getpass
 import earthaccess
-
-EARTHDATA_USER = os.environ.get("EARTHDATA_USER") or input("Earthdata username: ")
-EARTHDATA_PASS = os.environ.get("EARTHDATA_PASS") or getpass("Earthdata password: ")
-
-def get_session():
-    os.environ.setdefault("EARTHDATA_USERNAME", EARTHDATA_USER)
-    os.environ.setdefault("EARTHDATA_PASSWORD", EARTHDATA_PASS)
-    earthaccess.login(strategy="environment")
-    return earthaccess.get_requests_https_session()
 
 CMR_BASE_URL = "https://cmr.earthdata.nasa.gov"
 
 SHORT_NAME = "FLDAS_NOAH01_C_GL_M"
 VERSION = "001"
-FILTER_TEMPORAL = "1993-01-01,2019-12-31"
+# Extended past the original 1993-2019 window: the app's date range runs to the
+# present, and the previous table was missing 2020 onwards. CMR simply returns
+# whatever months exist, so a future end date keeps this current.
+FILTER_TEMPORAL = os.environ.get("FLDAS_TEMPORAL", "1993-01-01,2026-12-31")
 FILTER_BBOX = "-20,-37,60,37"
 FILTER_SEARCH = ""
 FILTER_CLOUD_COVER_MIN = ""
 FILTER_CLOUD_COVER_MAX = ""
-DOWNLOAD_DIR = f"./{SHORT_NAME}_{VERSION}"
-MAX_WORKERS = 5  # Number of parallel downloads
+DOWNLOAD_DIR = os.environ.get("FLDAS_DOWNLOAD_DIR", f"./{SHORT_NAME}_{VERSION}")
+MAX_WORKERS = int(os.environ.get("MAX_WORKERS", "5"))  # Number of parallel downloads
 
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
+
+
+def get_session():
+    """Return an authenticated requests session for data downloads."""
+    auth = earthaccess.login(strategy="all", persist=False)
+    if not getattr(auth, "authenticated", True):
+        raise SystemExit(
+            "Earthdata login failed.\n"
+            "Create ~/.netrc containing:\n"
+            "  machine urs.earthdata.nasa.gov login <user> password <pass>\n"
+            "(chmod 600 ~/.netrc), or set EARTHDATA_USERNAME and EARTHDATA_PASSWORD."
+        )
+    return earthaccess.get_requests_https_session()
 
 
 def query_cmr_granules(
@@ -192,6 +210,19 @@ def fetch_total_granules_count_from_cmr(short_name: str, version: str, **params)
 
 def main():
     """Main function to download data from the CMR API"""
+    global FILTER_TEMPORAL
+
+    import argparse
+
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--temporal", default=FILTER_TEMPORAL,
+                    help=f'CMR temporal range (default "{FILTER_TEMPORAL}")')
+    ap.add_argument("--list-only", action="store_true",
+                    help="report what would be downloaded and exit (no files, no login)")
+    args = ap.parse_args()
+
+    FILTER_TEMPORAL = args.temporal
+
     filter_params = {}
 
     if FILTER_TEMPORAL:
@@ -211,6 +242,16 @@ def main():
         SHORT_NAME, VERSION, **filter_params
     )
     print(f"Total granules: {total_granules:,}")
+
+    if args.list_only:
+        _, items = query_cmr_granules(SHORT_NAME, VERSION, page_size=2000, **filter_params)
+        sizes = [float(i.get("umm", {}).get("DataGranule", {})
+                       .get("ArchiveAndDistributionSize", 0) or 0) for i in items]
+        if any(sizes):
+            print(f"Approximate download size: {sum(sizes) / 1024:.1f} GiB")
+        print(f"Destination: {os.path.abspath(DOWNLOAD_DIR)}")
+        print("Nothing downloaded (--list-only).")
+        return
 
     download_data_from_cmr(SHORT_NAME, VERSION, total_granules, **filter_params)
 

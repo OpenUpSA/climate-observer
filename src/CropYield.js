@@ -189,11 +189,13 @@ const CropYield = ({ crop, onCropChange }) => {
             })
             .map(row => ({
                 year: parseInt(('' + row.date).split('-')[0]),
-                value: parseFloat(cropWRSI(parseFloat(row['WRSI']), kcMid).toFixed(4)),
+                value: parseFloat(row['WRSI']),
             }))
             .sort((a, b) => a.year - b.year);
 
-        // average per year (multiple grid cells may exist)
+        // Average the raw values per year (multiple grid cells may exist) and scale
+        // by Kc afterwards. Clipping each cell before averaging would understate a
+        // year where one cell had more water than the crop needs.
         const byYear = {};
         rows.forEach(r => {
             if (!byYear[r.year]) byYear[r.year] = { sum: 0, count: 0 };
@@ -201,7 +203,10 @@ const CropYield = ({ crop, onCropChange }) => {
             byYear[r.year].count += 1;
         });
         const averaged = Object.entries(byYear)
-            .map(([year, { sum, count }]) => ({ year: parseInt(year), value: parseFloat((sum / count).toFixed(4)) }))
+            .map(([year, { sum, count }]) => ({
+                year: parseInt(year),
+                value: parseFloat(cropWRSI(sum / count, kcMid).toFixed(4)),
+            }))
             .sort((a, b) => a.year - b.year);
 
         setMonthlyData(averaged.length >= 2 ? addTrend(averaged, 'year', 'value') : averaged);

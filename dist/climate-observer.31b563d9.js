@@ -207,11 +207,11 @@
       });
     }
   }
-})({"baKTK":[function(require,module,exports,__globalThis) {
+})({"6Vc94":[function(require,module,exports,__globalThis) {
 var global = arguments[3];
 var HMR_HOST = null;
 var HMR_PORT = null;
-var HMR_SERVER_PORT = 38381;
+var HMR_SERVER_PORT = 38549;
 var HMR_SECURE = false;
 var HMR_ENV_HASH = "439701173a9199ea";
 var HMR_USE_SSE = false;
@@ -250106,9 +250106,11 @@ const CropYield = ({ crop, onCropChange })=>{
             return parseInt(parts[1]) === parseInt(selectedMonth) && row['WRSI'] != null;
         }).map((row)=>({
                 year: parseInt(('' + row.date).split('-')[0]),
-                value: parseFloat(cropWRSI(parseFloat(row['WRSI']), kcMid).toFixed(4))
+                value: parseFloat(row['WRSI'])
             })).sort((a, b)=>a.year - b.year);
-        // average per year (multiple grid cells may exist)
+        // Average the raw values per year (multiple grid cells may exist) and scale
+        // by Kc afterwards. Clipping each cell before averaging would understate a
+        // year where one cell had more water than the crop needs.
         const byYear = {};
         rows.forEach((r)=>{
             if (!byYear[r.year]) byYear[r.year] = {
@@ -250120,7 +250122,7 @@ const CropYield = ({ crop, onCropChange })=>{
         });
         const averaged = Object.entries(byYear).map(([year, { sum, count }])=>({
                 year: parseInt(year),
-                value: parseFloat((sum / count).toFixed(4))
+                value: parseFloat(cropWRSI(sum / count, kcMid).toFixed(4))
             })).sort((a, b)=>a.year - b.year);
         setMonthlyData(averaged.length >= 2 ? addTrend(averaged, 'year', 'value') : averaged);
     }, [
@@ -250144,12 +250146,12 @@ const CropYield = ({ crop, onCropChange })=>{
                 ]
             }, c.name, true, {
                 fileName: "src/CropYield.js",
-                lineNumber: 216,
+                lineNumber: 221,
                 columnNumber: 17
             }, undefined))
     }, void 0, false, {
         fileName: "src/CropYield.js",
-        lineNumber: 214,
+        lineNumber: 219,
         columnNumber: 9
     }, undefined);
     return /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _jsxDevRuntime.Fragment), {
@@ -250173,25 +250175,25 @@ const CropYield = ({ crop, onCropChange })=>{
                                                 svg: true
                                             }, void 0, false, {
                                                 fileName: "src/CropYield.js",
-                                                lineNumber: 227,
+                                                lineNumber: 232,
                                                 columnNumber: 62
                                             }, undefined)
                                         }, void 0, false, {
                                             fileName: "src/CropYield.js",
-                                            lineNumber: 227,
+                                            lineNumber: 232,
                                             columnNumber: 25
                                         }, undefined),
                                         /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("span", {
                                             children: city !== '' && city !== 'location' ? cities.filter((c)=>c.city.replaceAll(' ', '-').toLowerCase() === city)[0]?.city : address
                                         }, void 0, false, {
                                             fileName: "src/CropYield.js",
-                                            lineNumber: 228,
+                                            lineNumber: 233,
                                             columnNumber: 25
                                         }, undefined)
                                     ]
                                 }, void 0, true, {
                                     fileName: "src/CropYield.js",
-                                    lineNumber: 226,
+                                    lineNumber: 231,
                                     columnNumber: 90
                                 }, undefined),
                                 " from ",
@@ -250201,12 +250203,12 @@ const CropYield = ({ crop, onCropChange })=>{
                             ]
                         }, void 0, true, {
                             fileName: "src/CropYield.js",
-                            lineNumber: 226,
+                            lineNumber: 231,
                             columnNumber: 21
                         }, undefined)
                     }, void 0, false, {
                         fileName: "src/CropYield.js",
-                        lineNumber: 225,
+                        lineNumber: 230,
                         columnNumber: 17
                     }, undefined),
                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
@@ -250219,7 +250221,7 @@ const CropYield = ({ crop, onCropChange })=>{
                                     children: cropSelect
                                 }, void 0, false, {
                                     fileName: "src/CropYield.js",
-                                    lineNumber: 234,
+                                    lineNumber: 239,
                                     columnNumber: 25
                                 }, undefined),
                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _colDefault.default), {
@@ -250233,14 +250235,14 @@ const CropYield = ({ crop, onCropChange })=>{
                                                         size: 1
                                                     }, void 0, false, {
                                                         fileName: "src/CropYield.js",
-                                                        lineNumber: 240,
+                                                        lineNumber: 245,
                                                         columnNumber: 37
                                                     }, undefined),
                                                     " Download"
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "src/CropYield.js",
-                                                lineNumber: 239,
+                                                lineNumber: 244,
                                                 columnNumber: 33
                                             }, undefined),
                                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _dropdownDefault.default).Menu, {
@@ -250253,7 +250255,7 @@ const CropYield = ({ crop, onCropChange })=>{
                                                         children: "CSV"
                                                     }, void 0, false, {
                                                         fileName: "src/CropYield.js",
-                                                        lineNumber: 243,
+                                                        lineNumber: 248,
                                                         columnNumber: 37
                                                     }, undefined),
                                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _dropdownDefault.default).Item, {
@@ -250261,35 +250263,35 @@ const CropYield = ({ crop, onCropChange })=>{
                                                         children: "PNG"
                                                     }, void 0, false, {
                                                         fileName: "src/CropYield.js",
-                                                        lineNumber: 244,
+                                                        lineNumber: 249,
                                                         columnNumber: 37
                                                     }, undefined)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "src/CropYield.js",
-                                                lineNumber: 242,
+                                                lineNumber: 247,
                                                 columnNumber: 33
                                             }, undefined)
                                         ]
                                     }, void 0, true, {
                                         fileName: "src/CropYield.js",
-                                        lineNumber: 238,
+                                        lineNumber: 243,
                                         columnNumber: 29
                                     }, undefined)
                                 }, void 0, false, {
                                     fileName: "src/CropYield.js",
-                                    lineNumber: 237,
+                                    lineNumber: 242,
                                     columnNumber: 25
                                 }, undefined)
                             ]
                         }, void 0, true, {
                             fileName: "src/CropYield.js",
-                            lineNumber: 233,
+                            lineNumber: 238,
                             columnNumber: 21
                         }, undefined)
                     }, void 0, false, {
                         fileName: "src/CropYield.js",
-                        lineNumber: 232,
+                        lineNumber: 237,
                         columnNumber: 17
                     }, undefined),
                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
@@ -250304,7 +250306,7 @@ const CropYield = ({ crop, onCropChange })=>{
                                         children: "Loading\u2026"
                                     }, void 0, false, {
                                         fileName: "src/CropYield.js",
-                                        lineNumber: 253,
+                                        lineNumber: 258,
                                         columnNumber: 37
                                     }, undefined),
                                     !loading && annualData.length === 0 && /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("p", {
@@ -250312,7 +250314,7 @@ const CropYield = ({ crop, onCropChange })=>{
                                         children: "No data available for this location and date range."
                                     }, void 0, false, {
                                         fileName: "src/CropYield.js",
-                                        lineNumber: 255,
+                                        lineNumber: 260,
                                         columnNumber: 29
                                     }, undefined),
                                     !loading && annualData.length > 0 && /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _recharts.ResponsiveContainer), {
@@ -250331,24 +250333,24 @@ const CropYield = ({ crop, onCropChange })=>{
                                                     dataKey: "year"
                                                 }, void 0, false, {
                                                     fileName: "src/CropYield.js",
-                                                    lineNumber: 260,
+                                                    lineNumber: 265,
                                                     columnNumber: 37
                                                 }, undefined),
                                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _recharts.YAxis), {}, void 0, false, {
                                                     fileName: "src/CropYield.js",
-                                                    lineNumber: 261,
+                                                    lineNumber: 266,
                                                     columnNumber: 37
                                                 }, undefined),
                                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _recharts.Tooltip), {}, void 0, false, {
                                                     fileName: "src/CropYield.js",
-                                                    lineNumber: 262,
+                                                    lineNumber: 267,
                                                     columnNumber: 37
                                                 }, undefined),
                                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _recharts.CartesianGrid), {
                                                     stroke: "#f5f5f5"
                                                 }, void 0, false, {
                                                     fileName: "src/CropYield.js",
-                                                    lineNumber: 263,
+                                                    lineNumber: 268,
                                                     columnNumber: 37
                                                 }, undefined),
                                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _recharts.Line), {
@@ -250360,7 +250362,7 @@ const CropYield = ({ crop, onCropChange })=>{
                                                     name: seriesLabel
                                                 }, void 0, false, {
                                                     fileName: "src/CropYield.js",
-                                                    lineNumber: 264,
+                                                    lineNumber: 269,
                                                     columnNumber: 37
                                                 }, undefined),
                                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _recharts.Line), {
@@ -250373,24 +250375,24 @@ const CropYield = ({ crop, onCropChange })=>{
                                                     name: "Trend"
                                                 }, void 0, false, {
                                                     fileName: "src/CropYield.js",
-                                                    lineNumber: 265,
+                                                    lineNumber: 270,
                                                     columnNumber: 37
                                                 }, undefined)
                                             ]
                                         }, void 0, true, {
                                             fileName: "src/CropYield.js",
-                                            lineNumber: 259,
+                                            lineNumber: 264,
                                             columnNumber: 33
                                         }, undefined)
                                     }, void 0, false, {
                                         fileName: "src/CropYield.js",
-                                        lineNumber: 258,
+                                        lineNumber: 263,
                                         columnNumber: 29
                                     }, undefined)
                                 ]
                             }, void 0, true, {
                                 fileName: "src/CropYield.js",
-                                lineNumber: 252,
+                                lineNumber: 257,
                                 columnNumber: 21
                             }, undefined),
                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("footer", {
@@ -250408,7 +250410,7 @@ const CropYield = ({ crop, onCropChange })=>{
                                                             }
                                                         }, void 0, false, {
                                                             fileName: "src/CropYield.js",
-                                                            lineNumber: 273,
+                                                            lineNumber: 278,
                                                             columnNumber: 63
                                                         }, undefined),
                                                         " ",
@@ -250419,7 +250421,7 @@ const CropYield = ({ crop, onCropChange })=>{
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "src/CropYield.js",
-                                                    lineNumber: 273,
+                                                    lineNumber: 278,
                                                     columnNumber: 33
                                                 }, undefined),
                                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("span", {
@@ -250432,20 +250434,20 @@ const CropYield = ({ crop, onCropChange })=>{
                                                             }
                                                         }, void 0, false, {
                                                             fileName: "src/CropYield.js",
-                                                            lineNumber: 274,
+                                                            lineNumber: 279,
                                                             columnNumber: 63
                                                         }, undefined),
                                                         " Trend"
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "src/CropYield.js",
-                                                    lineNumber: 274,
+                                                    lineNumber: 279,
                                                     columnNumber: 33
                                                 }, undefined)
                                             ]
                                         }, void 0, true, {
                                             fileName: "src/CropYield.js",
-                                            lineNumber: 272,
+                                            lineNumber: 277,
                                             columnNumber: 29
                                         }, undefined),
                                         /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _colDefault.default), {
@@ -250459,36 +250461,36 @@ const CropYield = ({ crop, onCropChange })=>{
                                                     children: "FLDAS Noah Land Surface Model"
                                                 }, void 0, false, {
                                                     fileName: "src/CropYield.js",
-                                                    lineNumber: 277,
+                                                    lineNumber: 282,
                                                     columnNumber: 41
                                                 }, undefined)
                                             ]
                                         }, void 0, true, {
                                             fileName: "src/CropYield.js",
-                                            lineNumber: 276,
+                                            lineNumber: 281,
                                             columnNumber: 29
                                         }, undefined)
                                     ]
                                 }, void 0, true, {
                                     fileName: "src/CropYield.js",
-                                    lineNumber: 271,
+                                    lineNumber: 276,
                                     columnNumber: 25
                                 }, undefined)
                             }, void 0, false, {
                                 fileName: "src/CropYield.js",
-                                lineNumber: 270,
+                                lineNumber: 275,
                                 columnNumber: 21
                             }, undefined)
                         ]
                     }, void 0, true, {
                         fileName: "src/CropYield.js",
-                        lineNumber: 251,
+                        lineNumber: 256,
                         columnNumber: 17
                     }, undefined)
                 ]
             }, void 0, true, {
                 fileName: "src/CropYield.js",
-                lineNumber: 224,
+                lineNumber: 229,
                 columnNumber: 13
             }, undefined),
             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("section", {
@@ -250513,25 +250515,25 @@ const CropYield = ({ crop, onCropChange })=>{
                                                 svg: true
                                             }, void 0, false, {
                                                 fileName: "src/CropYield.js",
-                                                lineNumber: 288,
+                                                lineNumber: 293,
                                                 columnNumber: 62
                                             }, undefined)
                                         }, void 0, false, {
                                             fileName: "src/CropYield.js",
-                                            lineNumber: 288,
+                                            lineNumber: 293,
                                             columnNumber: 25
                                         }, undefined),
                                         /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("span", {
                                             children: city !== '' && city !== 'location' ? cities.filter((c)=>c.city.replaceAll(' ', '-').toLowerCase() === city)[0]?.city : address
                                         }, void 0, false, {
                                             fileName: "src/CropYield.js",
-                                            lineNumber: 289,
+                                            lineNumber: 294,
                                             columnNumber: 25
                                         }, undefined)
                                     ]
                                 }, void 0, true, {
                                     fileName: "src/CropYield.js",
-                                    lineNumber: 287,
+                                    lineNumber: 292,
                                     columnNumber: 91
                                 }, undefined),
                                 " from ",
@@ -250541,12 +250543,12 @@ const CropYield = ({ crop, onCropChange })=>{
                             ]
                         }, void 0, true, {
                             fileName: "src/CropYield.js",
-                            lineNumber: 287,
+                            lineNumber: 292,
                             columnNumber: 21
                         }, undefined)
                     }, void 0, false, {
                         fileName: "src/CropYield.js",
-                        lineNumber: 286,
+                        lineNumber: 291,
                         columnNumber: 17
                     }, undefined),
                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
@@ -250559,7 +250561,7 @@ const CropYield = ({ crop, onCropChange })=>{
                                     children: cropSelect
                                 }, void 0, false, {
                                     fileName: "src/CropYield.js",
-                                    lineNumber: 295,
+                                    lineNumber: 300,
                                     columnNumber: 25
                                 }, undefined),
                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _colDefault.default), {
@@ -250572,17 +250574,17 @@ const CropYield = ({ crop, onCropChange })=>{
                                                 children: name
                                             }, i + 1, false, {
                                                 fileName: "src/CropYield.js",
-                                                lineNumber: 301,
+                                                lineNumber: 306,
                                                 columnNumber: 37
                                             }, undefined))
                                     }, void 0, false, {
                                         fileName: "src/CropYield.js",
-                                        lineNumber: 299,
+                                        lineNumber: 304,
                                         columnNumber: 29
                                     }, undefined)
                                 }, void 0, false, {
                                     fileName: "src/CropYield.js",
-                                    lineNumber: 298,
+                                    lineNumber: 303,
                                     columnNumber: 25
                                 }, undefined),
                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _colDefault.default), {
@@ -250596,14 +250598,14 @@ const CropYield = ({ crop, onCropChange })=>{
                                                         size: 1
                                                     }, void 0, false, {
                                                         fileName: "src/CropYield.js",
-                                                        lineNumber: 308,
+                                                        lineNumber: 313,
                                                         columnNumber: 37
                                                     }, undefined),
                                                     " Download"
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "src/CropYield.js",
-                                                lineNumber: 307,
+                                                lineNumber: 312,
                                                 columnNumber: 33
                                             }, undefined),
                                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _dropdownDefault.default).Menu, {
@@ -250616,7 +250618,7 @@ const CropYield = ({ crop, onCropChange })=>{
                                                         children: "CSV"
                                                     }, void 0, false, {
                                                         fileName: "src/CropYield.js",
-                                                        lineNumber: 311,
+                                                        lineNumber: 316,
                                                         columnNumber: 37
                                                     }, undefined),
                                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _dropdownDefault.default).Item, {
@@ -250624,35 +250626,35 @@ const CropYield = ({ crop, onCropChange })=>{
                                                         children: "PNG"
                                                     }, void 0, false, {
                                                         fileName: "src/CropYield.js",
-                                                        lineNumber: 312,
+                                                        lineNumber: 317,
                                                         columnNumber: 37
                                                     }, undefined)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "src/CropYield.js",
-                                                lineNumber: 310,
+                                                lineNumber: 315,
                                                 columnNumber: 33
                                             }, undefined)
                                         ]
                                     }, void 0, true, {
                                         fileName: "src/CropYield.js",
-                                        lineNumber: 306,
+                                        lineNumber: 311,
                                         columnNumber: 29
                                     }, undefined)
                                 }, void 0, false, {
                                     fileName: "src/CropYield.js",
-                                    lineNumber: 305,
+                                    lineNumber: 310,
                                     columnNumber: 25
                                 }, undefined)
                             ]
                         }, void 0, true, {
                             fileName: "src/CropYield.js",
-                            lineNumber: 294,
+                            lineNumber: 299,
                             columnNumber: 21
                         }, undefined)
                     }, void 0, false, {
                         fileName: "src/CropYield.js",
-                        lineNumber: 293,
+                        lineNumber: 298,
                         columnNumber: 17
                     }, undefined),
                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
@@ -250667,7 +250669,7 @@ const CropYield = ({ crop, onCropChange })=>{
                                         children: "Loading\u2026"
                                     }, void 0, false, {
                                         fileName: "src/CropYield.js",
-                                        lineNumber: 321,
+                                        lineNumber: 326,
                                         columnNumber: 37
                                     }, undefined),
                                     !loading && monthlyData.length === 0 && /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("p", {
@@ -250675,7 +250677,7 @@ const CropYield = ({ crop, onCropChange })=>{
                                         children: "No data available for this month and location."
                                     }, void 0, false, {
                                         fileName: "src/CropYield.js",
-                                        lineNumber: 323,
+                                        lineNumber: 328,
                                         columnNumber: 29
                                     }, undefined),
                                     !loading && monthlyData.length > 0 && /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _recharts.ResponsiveContainer), {
@@ -250694,24 +250696,24 @@ const CropYield = ({ crop, onCropChange })=>{
                                                     dataKey: "year"
                                                 }, void 0, false, {
                                                     fileName: "src/CropYield.js",
-                                                    lineNumber: 328,
+                                                    lineNumber: 333,
                                                     columnNumber: 37
                                                 }, undefined),
                                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _recharts.YAxis), {}, void 0, false, {
                                                     fileName: "src/CropYield.js",
-                                                    lineNumber: 329,
+                                                    lineNumber: 334,
                                                     columnNumber: 37
                                                 }, undefined),
                                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _recharts.Tooltip), {}, void 0, false, {
                                                     fileName: "src/CropYield.js",
-                                                    lineNumber: 330,
+                                                    lineNumber: 335,
                                                     columnNumber: 37
                                                 }, undefined),
                                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _recharts.CartesianGrid), {
                                                     stroke: "#f5f5f5"
                                                 }, void 0, false, {
                                                     fileName: "src/CropYield.js",
-                                                    lineNumber: 331,
+                                                    lineNumber: 336,
                                                     columnNumber: 37
                                                 }, undefined),
                                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _recharts.Line), {
@@ -250723,7 +250725,7 @@ const CropYield = ({ crop, onCropChange })=>{
                                                     name: seriesLabel
                                                 }, void 0, false, {
                                                     fileName: "src/CropYield.js",
-                                                    lineNumber: 332,
+                                                    lineNumber: 337,
                                                     columnNumber: 37
                                                 }, undefined),
                                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _recharts.Line), {
@@ -250736,24 +250738,24 @@ const CropYield = ({ crop, onCropChange })=>{
                                                     name: "Trend"
                                                 }, void 0, false, {
                                                     fileName: "src/CropYield.js",
-                                                    lineNumber: 333,
+                                                    lineNumber: 338,
                                                     columnNumber: 37
                                                 }, undefined)
                                             ]
                                         }, void 0, true, {
                                             fileName: "src/CropYield.js",
-                                            lineNumber: 327,
+                                            lineNumber: 332,
                                             columnNumber: 33
                                         }, undefined)
                                     }, void 0, false, {
                                         fileName: "src/CropYield.js",
-                                        lineNumber: 326,
+                                        lineNumber: 331,
                                         columnNumber: 29
                                     }, undefined)
                                 ]
                             }, void 0, true, {
                                 fileName: "src/CropYield.js",
-                                lineNumber: 320,
+                                lineNumber: 325,
                                 columnNumber: 21
                             }, undefined),
                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("footer", {
@@ -250771,7 +250773,7 @@ const CropYield = ({ crop, onCropChange })=>{
                                                             }
                                                         }, void 0, false, {
                                                             fileName: "src/CropYield.js",
-                                                            lineNumber: 341,
+                                                            lineNumber: 346,
                                                             columnNumber: 63
                                                         }, undefined),
                                                         " ",
@@ -250782,7 +250784,7 @@ const CropYield = ({ crop, onCropChange })=>{
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "src/CropYield.js",
-                                                    lineNumber: 341,
+                                                    lineNumber: 346,
                                                     columnNumber: 33
                                                 }, undefined),
                                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("span", {
@@ -250795,20 +250797,20 @@ const CropYield = ({ crop, onCropChange })=>{
                                                             }
                                                         }, void 0, false, {
                                                             fileName: "src/CropYield.js",
-                                                            lineNumber: 342,
+                                                            lineNumber: 347,
                                                             columnNumber: 63
                                                         }, undefined),
                                                         " Trend"
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "src/CropYield.js",
-                                                    lineNumber: 342,
+                                                    lineNumber: 347,
                                                     columnNumber: 33
                                                 }, undefined)
                                             ]
                                         }, void 0, true, {
                                             fileName: "src/CropYield.js",
-                                            lineNumber: 340,
+                                            lineNumber: 345,
                                             columnNumber: 29
                                         }, undefined),
                                         /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _colDefault.default), {
@@ -250822,36 +250824,36 @@ const CropYield = ({ crop, onCropChange })=>{
                                                     children: "FLDAS Noah Land Surface Model"
                                                 }, void 0, false, {
                                                     fileName: "src/CropYield.js",
-                                                    lineNumber: 345,
+                                                    lineNumber: 350,
                                                     columnNumber: 41
                                                 }, undefined)
                                             ]
                                         }, void 0, true, {
                                             fileName: "src/CropYield.js",
-                                            lineNumber: 344,
+                                            lineNumber: 349,
                                             columnNumber: 29
                                         }, undefined)
                                     ]
                                 }, void 0, true, {
                                     fileName: "src/CropYield.js",
-                                    lineNumber: 339,
+                                    lineNumber: 344,
                                     columnNumber: 25
                                 }, undefined)
                             }, void 0, false, {
                                 fileName: "src/CropYield.js",
-                                lineNumber: 338,
+                                lineNumber: 343,
                                 columnNumber: 21
                             }, undefined)
                         ]
                     }, void 0, true, {
                         fileName: "src/CropYield.js",
-                        lineNumber: 319,
+                        lineNumber: 324,
                         columnNumber: 17
                     }, undefined)
                 ]
             }, void 0, true, {
                 fileName: "src/CropYield.js",
-                lineNumber: 285,
+                lineNumber: 290,
                 columnNumber: 13
             }, undefined)
         ]
@@ -250868,6 +250870,6 @@ $RefreshReg$(_c, "CropYield");
   globalThis.$RefreshReg$ = prevRefreshReg;
   globalThis.$RefreshSig$ = prevRefreshSig;
 }
-},{"react/jsx-dev-runtime":"dVPUn","react":"jMk1U","./AppContext":"hW9bN","./supabase":"baEbC","react-bootstrap/Row":"2DPD4","react-bootstrap/Col":"6x0qd","react-bootstrap/Form":"6LPqw","react-bootstrap/Dropdown":"hUXGf","recharts":"k9rge","react-country-flag":"5BJMt","@mdi/react":"se5wE","@mdi/js":"gPLwB","@parcel/transformer-js/src/esmodule-helpers.js":"jnFvT","@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js":"7h6Pi"}],"atTOW":[function() {},{}]},["baKTK","a0t4e"], "a0t4e", "parcelRequire0ed3", {}, null, null, "http://localhost:38381")
+},{"react/jsx-dev-runtime":"dVPUn","react":"jMk1U","./AppContext":"hW9bN","./supabase":"baEbC","react-bootstrap/Row":"2DPD4","react-bootstrap/Col":"6x0qd","react-bootstrap/Form":"6LPqw","react-bootstrap/Dropdown":"hUXGf","recharts":"k9rge","react-country-flag":"5BJMt","@mdi/react":"se5wE","@mdi/js":"gPLwB","@parcel/transformer-js/src/esmodule-helpers.js":"jnFvT","@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js":"7h6Pi"}],"atTOW":[function() {},{}]},["6Vc94","a0t4e"], "a0t4e", "parcelRequire0ed3", {}, null, null, "http://localhost:38549")
 
 //# sourceMappingURL=climate-observer.31b563d9.js.map
